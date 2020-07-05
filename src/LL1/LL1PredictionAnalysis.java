@@ -281,7 +281,6 @@ public class LL1PredictionAnalysis {
                 String s1 = inputStream.get(index - 1);
                 if (s1.equals("else")) {
                     s = "f";
-
                 } else {
                     s = "8";
                 }

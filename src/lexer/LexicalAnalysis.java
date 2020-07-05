@@ -22,7 +22,7 @@ public class LexicalAnalysis {
 
 
     LexicalAnalysis(){
-        lexScanner = new LexScanner("E:\\ideaPro\\compiler\\src\\lexer\\test1.c");
+        lexScanner = new LexScanner("E:\\ideaPro\\MyCompiler\\src\\lexer\\test1.c");
         pr = lexScanner.getPr();
         symbolTable = new SymbolTable();
     }

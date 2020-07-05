@@ -85,13 +85,13 @@ public class Expression {
             point++;    // 读取右括号
             if (point >= list.size())
                 throw new MyException(MyException.EXPRESSIONERROR,-1);
-        }else if (token.getType() == Tag.INT){  // 常数
+        }else if (token.getType() == Tag.NUMINT){  // 常数
             result = Integer.parseInt(token.getContent());
             point++;
-        }else if(token.getType() == Tag.DOUBLE){
+        }else if(token.getType() == Tag.NUMDOUBLE){
             result = Double.parseDouble(token.getContent());
             point++;
-        }else if(token.getType() == Tag.FLOAT){
+        }else if(token.getType() == Tag.NUMFLOAT){
             result = Float.parseFloat(token.getContent());
             point++;
         }else{

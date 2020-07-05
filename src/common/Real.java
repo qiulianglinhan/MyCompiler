@@ -1,17 +1,17 @@
 package common;
 
-public class Num extends Token {
+public class Real extends Token{
 
-    private final int value;
+    private final double value;
     private boolean init;
 
-    public Num(int type, String content, int value, boolean init) {
+    public Real(int type, String content, double value,boolean init) {
         super(type, content);
         this.value = value;
         this.init = init;
     }
 
-    public int getValue() {
+    public double getValue() {
         return value;
     }
 

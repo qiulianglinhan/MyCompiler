@@ -12,6 +12,8 @@ public class MyException extends RuntimeException {
     public static final int BRACKETERROR = 4;
     public static final int EXPRESSIONERROR = 5;
     public static final int DECERROR = 6;
+    public static final int IDENTIFYERROR = 7;
+
 
     /**
      * 自定义异常
@@ -31,6 +33,8 @@ public class MyException extends RuntimeException {
             printExpressionError(line);
         }else if(errorCode == DECERROR){
             printDeclarationError(line);
+        }else if (errorCode == IDENTIFYERROR){
+            printIdentifyError(line);
         }
         else {
             unkonwError();
@@ -65,6 +69,11 @@ public class MyException extends RuntimeException {
     private void printDeclarationError(int line){
         System.err.println(line+"行赋值表达式编写错误.");
         System.exit(-1);
+    }
+
+    private void printIdentifyError(int line){
+        System.err.println(line+"行标识符错误.");
+        System.exit(Exit.IDENTIFYERROR);
     }
 
     private void unkonwError(){

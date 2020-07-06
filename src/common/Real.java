@@ -2,7 +2,7 @@ package common;
 
 public class Real extends Token{
 
-    private final double value;
+    private double value;
     private boolean init;
 
     public Real(int type, String content, double value,boolean init) {
@@ -13,6 +13,10 @@ public class Real extends Token{
 
     public double getValue() {
         return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
     }
 
     public boolean isInit() {

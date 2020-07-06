@@ -1,5 +1,6 @@
 package LL1;
 
+import common.Exit;
 import common.MyException;
 import common.Tag;
 import common.Token;
@@ -19,6 +20,15 @@ public class Expression {
 
     private List<Token> list;
     private int point ;
+
+    public Expression(){
+
+    }
+
+    public Expression(List<Token> list){
+        point = 0;
+        this.list = list;
+    }
 
     public void setList(List<Token> list) {
         point = 0;

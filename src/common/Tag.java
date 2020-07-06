@@ -11,7 +11,7 @@ public class Tag {
 
     public static final int
     PLUS = 301, MINUS = 302, MULTI = 303, DIV = 304, MOD = 305, EQ = 306,
-    GREAT = 307, LOW = 308, GE = 309, LE = 310, EE = 311, NE = 312, PLUSPLUS = 313,
+    GREATER = 307, LOWER = 308, GE = 309, LE = 310, EE = 311, NE = 312, PLUSPLUS = 313,
     MINUSMINUS = 314, PLUSEQ = 315, MINUSEQ = 316, AND = 317, OR = 318;
 
     public static final int

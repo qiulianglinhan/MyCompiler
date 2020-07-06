@@ -2,7 +2,7 @@ package common;
 
 public class Num extends Token {
 
-    private final int value;
+    private int value;
     private boolean init;
 
     public Num(int type, String content, int value, boolean init) {
@@ -13,6 +13,10 @@ public class Num extends Token {
 
     public int getValue() {
         return value;
+    }
+
+    public void setValue(int value) {
+        this.value = value;
     }
 
     public boolean isInit() {

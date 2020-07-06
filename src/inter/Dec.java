@@ -14,10 +14,12 @@ import java.util.ArrayList;
  */
 public class Dec {
 
-    private int type, peek = 1;
-    private ArrayList<Token> arrayList;
-    private Expression expression;
-    private ArrayList<Token> subArrayList;
+    private int type;                       // 声明语句类型
+    private ArrayList<Token> arrayList;     // 声明语句序列
+    private Expression expression;          // 表达式求值实例
+    private ArrayList<Token> subArrayList;  // 表达式语句序列
+
+    private int peek = 1;                   // Token序列顶部指针，0是声明类型
 
     public Dec(){
         expression = new Expression();
@@ -69,6 +71,9 @@ public class Dec {
         }
     }
 
+    /**
+     * 解析并生成三地址码
+     */
     public void gen(){
         if (arrayList.get(peek).getType() != Tag.IDENTIFY)
             throw new MyException(MyException.IDENTIFYERROR,-1);
@@ -114,6 +119,12 @@ public class Dec {
 
     }
 
+    /**
+     * 生成三地址码
+     * @param name 生成identify名称
+     * @param num  生成数字
+     * @return  三地址码字符串表示
+     */
     public String eliminate(String name, Number num){
         System.out.println("(=,"+num+",_,"+name+")");
         return "(=,"+num+",_,"+name+")";

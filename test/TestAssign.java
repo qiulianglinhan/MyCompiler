@@ -1,13 +1,14 @@
 import common.Tag;
 import common.Token;
+import inter.Assign;
 import inter.Dec;
 import inter.Inter;
 
 import java.util.ArrayList;
 
-public class TestDec {
-
+public class TestAssign {
     public static void main(String[] args) {
+        // declare begin
         // declaration: int num1 = 2+3*2,num2,num3 = 56;
         Inter inter = new Inter();
         Token token1 = new Token(Tag.INT,"int");
@@ -34,23 +35,32 @@ public class TestDec {
         dec.setType(token1.getType());
         dec.setArrayList(list);
         dec.gen();
-    }
+        // declare end
 
+        // assign begin
+        Token token16 = new Token(Tag.IDENTIFY,"num1");
+        Token token17 = new Token(Tag.EQ,"=");
+        Token token18 = new Token(Tag.NUMINT,"53");
+        Token token19 = new Token(Tag.COMMA,",");
+        Token token20 = new Token(Tag.IDENTIFY,"num4");
+        Token token21 = new Token(Tag.EQ,"=");
+        Token token22 = new Token(Tag.NUMINT,"34");
+        Token token23 = new Token(Tag.PLUS,"+");
+        Token token24 = new Token(Tag.NUMINT,"6");
+        Token token25 = new Token(Tag.SEMICOLON,";");
+        list.clear();
+        list.add(token16);list.add(token17);list.add(token18);list.add(token19);
+        list.add(token20);list.add(token21);list.add(token22);list.add(token23);
+        list.add(token24);list.add(token25);
+        Assign assign = new Assign(token16.getContent(),list);
+        assign.gen();
+        // assign end
+
+    }
 }
 /*
-(401,int)
-(601,num1)
-(306,=)
-(401,2)
-(301,+)
-(401,3)
-(303,*)
-(401,2)
-(505,,)
 (601,num2)
-(505,,)
-(601,num3)
 (306,=)
-(401,56)
+(401,53)
 (506,;)
  */

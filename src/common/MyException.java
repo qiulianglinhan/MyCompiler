@@ -13,7 +13,8 @@ public class MyException extends RuntimeException {
     public static final int EXPRESSIONERROR = 5;
     public static final int DECERROR = 6;
     public static final int IDENTIFYERROR = 7;
-
+    public static final int IDENTIFYNOTFOUND = 8;
+    public static final int RELERROR = 9;
 
     /**
      * 自定义异常
@@ -35,6 +36,10 @@ public class MyException extends RuntimeException {
             printDeclarationError(line);
         }else if (errorCode == IDENTIFYERROR){
             printIdentifyError(line);
+        }else if (errorCode == IDENTIFYNOTFOUND){
+            printIdentifyNotFound(line);
+        }else if (errorCode == RELERROR){
+            printRelError(line);
         }
         else {
             unkonwError();
@@ -74,6 +79,16 @@ public class MyException extends RuntimeException {
     private void printIdentifyError(int line){
         System.err.println(line+"行标识符错误.");
         System.exit(Exit.IDENTIFYERROR);
+    }
+
+    private void printIdentifyNotFound(int line){
+        System.err.println(line+"行标识符未找到错误.");
+        System.exit(Exit.IDNETIFYNOTFOUDERROR);
+    }
+
+    private void printRelError(int line){
+        System.err.println(line+"行relation表达式错误");
+        System.exit(Exit.RELERROR);
     }
 
     private void unkonwError(){

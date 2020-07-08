@@ -19,14 +19,14 @@ public class Inter {
         tagArrayList = new ArrayList<>();
         tag2symbol = new HashMap<>();
         tag2low = new HashMap<>();
-        tagArrayList.add(Tag.EQ);tagArrayList.add(Tag.GREATER);tagArrayList.add(Tag.LOWER);
-        tagArrayList.add(Tag.GE);tagArrayList.add(Tag.LE);tagArrayList.add(Tag.EE);
+        tagArrayList.add(Tag.EQ);tagArrayList.add(Tag.GT);tagArrayList.add(Tag.LW);
+        tagArrayList.add(Tag.GE);tagArrayList.add(Tag.LE);tagArrayList.add(Tag.EQ);
         tagArrayList.add(Tag.NE);
-        tag2symbol.put(Tag.EQ,"=");tag2symbol.put(Tag.GREATER,">");tag2symbol.put(Tag.LOWER,"<");
-        tag2symbol.put(Tag.GE,">=");tag2symbol.put(Tag.LE,"<=");tag2symbol.put(Tag.EE,"==");
+        tag2symbol.put(Tag.ASSIGN,"=");tag2symbol.put(Tag.GT,">");tag2symbol.put(Tag.LW,"<");
+        tag2symbol.put(Tag.GE,">=");tag2symbol.put(Tag.LE,"<=");tag2symbol.put(Tag.EQ,"==");
         tag2symbol.put(Tag.NE,"!=");
-        tag2low.put(Tag.EQ,"=");tag2low.put(Tag.GREATER,"gt");tag2low.put(Tag.LOWER,"lw");
-        tag2low.put(Tag.GE,"ge");tag2low.put(Tag.LE,"le");tag2low.put(Tag.EE,"eq");
+        tag2low.put(Tag.ASSIGN,"=");tag2low.put(Tag.GT,"gt");tag2low.put(Tag.LW,"lw");
+        tag2low.put(Tag.GE,"ge");tag2low.put(Tag.LE,"le");tag2low.put(Tag.EQ,"eq");
         tag2low.put(Tag.NE,"ne");
     }
 

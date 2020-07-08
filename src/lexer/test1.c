@@ -1,8 +1,7 @@
 void main(){
 	int num1 = 123;
 	int num2 = 123;
-	float num3 = 1234.5;
-	double num4 = 12345.6666;
+	double num3 = 1234.5,num4 = 12345.6666;
 	for(int i = 0;i < 100;++i){
 		do{
 			if(num1==num2||num3!=num4){

@@ -69,7 +69,7 @@ public class Assign {
             throw new MyException(MyException.IDENTIFYNOTFOUND,-1);
         }
 
-        if (arrayList.get(peek).getType() == Tag.EQ){
+        if (arrayList.get(peek).getType() == Tag.ASSIGN){
             peek++; // jump eq =
             getExpressionList();
             expression.setList(subArrayList);
@@ -80,13 +80,13 @@ public class Assign {
                 num.setInit(true);
                 num.setValue(itmp);
                 Inter.declaration.put(name,num);    // map 自动替换已有项
-                eliminate(Tag.EQ,String.valueOf(itmp),null,name);
+                eliminate(Tag.ASSIGN,String.valueOf(itmp),null,name);
             }else{
                 Real real = (Real) Inter.declaration.get(name);
                 real.setInit(true);
                 real.setValue(dtmp);
                 Inter.declaration.put(name,real);
-                eliminate(Tag.EQ,String.valueOf(dtmp),null,name);
+                eliminate(Tag.ASSIGN,String.valueOf(dtmp),null,name);
             }
             if (arrayList.get(peek).getType() == Tag.COMMA){
                 peek++; // jump ,

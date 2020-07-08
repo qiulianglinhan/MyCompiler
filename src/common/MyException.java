@@ -15,6 +15,7 @@ public class MyException extends RuntimeException {
     public static final int IDENTIFYERROR = 7;
     public static final int IDENTIFYNOTFOUND = 8;
     public static final int RELERROR = 9;
+    public static final int UNKNOWWORD = 10;
 
     /**
      * 自定义异常
@@ -40,6 +41,8 @@ public class MyException extends RuntimeException {
             printIdentifyNotFound(line);
         }else if (errorCode == RELERROR){
             printRelError(line);
+        }else if (errorCode == UNKNOWWORD){
+            printUnknowWordError(line);
         }
         else {
             unkonwError();
@@ -89,6 +92,11 @@ public class MyException extends RuntimeException {
     private void printRelError(int line){
         System.err.println(line+"行relation表达式错误");
         System.exit(Exit.RELERROR);
+    }
+
+    private void printUnknowWordError(int line){
+        System.err.println(line+"行出现未知符号");
+        System.exit(Exit.UNKNOWWORDERROR);
     }
 
     private void unkonwError(){

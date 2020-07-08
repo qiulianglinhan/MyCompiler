@@ -79,7 +79,7 @@ public class Dec {
             throw new MyException(MyException.IDENTIFYERROR,-1);
         String name = arrayList.get(peek++).getContent();
 
-        if (arrayList.get(peek).getType() == Tag.EQ){
+        if (arrayList.get(peek).getType() == Tag.ASSIGN){
             peek++; // jump eq =
             getExpressionList();
             expression.setList(subArrayList);

@@ -101,9 +101,6 @@ public class Expression {
         }else if(token.getType() == Tag.NUMDOUBLE){
             result = Double.parseDouble(token.getContent());
             point++;
-        }else if(token.getType() == Tag.NUMFLOAT){
-            result = Float.parseFloat(token.getContent());
-            point++;
         }else{
             throw new MyException(-1,-1);
         }

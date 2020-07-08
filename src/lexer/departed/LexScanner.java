@@ -1,4 +1,4 @@
-package lexer;
+package lexer.departed;
 
 import java.io.*;
 
@@ -6,10 +6,10 @@ public class LexScanner {
     private FileReader fr = null;
     private FileWriter fw = null;
     private PushbackReader pr = null;
-    private String outMidFileName;
+    private String outMidFileName = "";
 
-    public LexScanner(String filename){
-        File fin = new File((filename));
+    LexScanner(String fileName){
+        File fin = new File((fileName));
 
         // 文件必须以.c结尾
         if(!fin.getName().endsWith(".c")){
@@ -22,11 +22,11 @@ public class LexScanner {
             fr = new FileReader(fin);
             pr = new PushbackReader(fr,2);  // 两个缓冲字符
         } catch (FileNotFoundException e) {
-            System.err.println("未找到"+filename+"文件，请重新输入");
+            System.err.println("未找到"+fileName+"文件，请重新输入");
             e.printStackTrace();
         }
 
-        outMidFileName = filename.substring(0,filename.indexOf('.'))+".lex";    // 词法分析结果后缀lex
+        outMidFileName = fileName.substring(0,fileName.indexOf('.'))+".lex";    // 词法分析结果后缀lex
         File fout = new File(outMidFileName);
 
         try {
@@ -38,6 +38,18 @@ public class LexScanner {
             e.printStackTrace();
         }
 
+    }
+
+    public FileReader getFr() {
+        return fr;
+    }
+
+    public FileWriter getFw() {
+        return fw;
+    }
+
+    public PushbackReader getPr() {
+        return pr;
     }
 
     public String getOutMidFileName() {
@@ -53,39 +65,6 @@ public class LexScanner {
             e.printStackTrace();
         }
         return false;
-    }
-
-    public Character peek() throws IOException {
-        int c = pr.read();
-        pr.unread(c);
-        return (char) c;
-    }
-
-    public Character[] peekTwoChar() throws IOException {
-        Character[] chs = new Character[2];
-        chs[0] = (char)pr.read();
-        chs[1] = (char)pr.read();
-        pr.unread(chs[1]);
-        pr.unread(chs[0]);
-        return chs;
-    }
-
-    public Character next() throws IOException {
-        return (char)pr.read();
-    }
-
-    public void back(int c) throws IOException {
-        pr.unread(c);
-    }
-
-    public void backChars(char[] buf) throws IOException {
-        for (char c : buf) {
-            pr.unread(c);
-        }
-    }
-
-    public void writeToFile(int categoryCode,String tokenName,int line) throws IOException {
-        fw.write("["+categoryCode+","+tokenName+","+line+"]\n");
     }
 
 }

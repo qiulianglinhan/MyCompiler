@@ -10,7 +10,7 @@ public class TestRel {
     public static void main(String[] args) {
         new Inter();
         Token token1 = new Token(Tag.NUMINT,"23");
-        Token token2 = new Token(Tag.GREATER,">");
+        Token token2 = new Token(Tag.GT,">");
         Token token3 = new Token(Tag.NUMINT,"10");
         ArrayList<Token> arrayList = new ArrayList<>();
         arrayList.add(token1);

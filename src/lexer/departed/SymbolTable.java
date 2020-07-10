@@ -3,6 +3,7 @@ package lexer.departed;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public class SymbolTable {
     private List<String> symbolTableList = new ArrayList<>();
 

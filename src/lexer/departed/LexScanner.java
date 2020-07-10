@@ -2,6 +2,7 @@ package lexer.departed;
 
 import java.io.*;
 
+@Deprecated
 public class LexScanner {
     private FileReader fr = null;
     private FileWriter fw = null;

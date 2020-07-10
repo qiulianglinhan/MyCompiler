@@ -5,6 +5,7 @@ import common.MyException;
 import java.io.IOException;
 import java.io.PushbackReader;
 
+@Deprecated
 public class LexicalAnalysis {
     LexScanner lexScanner = null;
     private String description;

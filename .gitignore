@@ -34,3 +34,7 @@ hs_err_pid*
 
 # test folder need not upload
 test
+
+# my test c file and .lex file which is defined by myself
+*.c
+*.lex

@@ -15,7 +15,6 @@ public class LexicalAnalysis {
     private int categoryCode = 0;
     private int line = 1;
 
-
     public LexicalAnalysis(String filename) throws IOException {
         lexScanner = new LexScanner(filename);
         this.lexicalAnalysisProcess();
@@ -316,6 +315,7 @@ public class LexicalAnalysis {
                         throw new MyException(MyException.UNKNOWWORD,line);
             }
 
+            // skip space, line comment, block comment.
             if (token.equals("") || token.equals("//") || token.equals("/*") || token.equals("*/")){
                 token = "";
                 description = "";

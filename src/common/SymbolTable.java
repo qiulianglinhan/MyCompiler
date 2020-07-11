@@ -3,7 +3,8 @@ package common;
 import java.util.*;
 
 public class SymbolTable {
-    public static Set<String> KEYWORDS = new HashSet<>();
+    public static Set<String> KEYWORDS = new HashSet<>();       // 保留关键字
+    public static Set<Integer> COMPAREWORDS = new HashSet<>();   // 比较关键字
     public static Map<String,Integer> SYMBOL2TAG = new HashMap<>();
     public static Map<Integer,String> TAG2SYMBOL = new HashMap<>();
     public static Stack<Token> TOEKNS = new Stack<>();  // 存放 Token 对象
@@ -48,6 +49,11 @@ public class SymbolTable {
         // tag to symbol begin
         SYMBOL2TAG.forEach((k,v)-> TAG2SYMBOL.put(v,k));
         // tag to symbol end
+
+        // compare words begin
+        COMPAREWORDS.add(Tag.EQ);COMPAREWORDS.add(Tag.GT);COMPAREWORDS.add(Tag.LW);
+        COMPAREWORDS.add(Tag.GE);COMPAREWORDS.add(Tag.LE);COMPAREWORDS.add(Tag.NE);
+        // compare words end
 
     }
 

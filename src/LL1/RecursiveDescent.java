@@ -86,8 +86,15 @@ public class RecursiveDescent {
     private void body(){
         if (expect(Tag.IF))
             ifStat();
+        else if (expect(Tag.ELSE)) {  // 悬空 else
+            System.err.println(peek().getLine()+"行出现悬空else");
+            error();
+        }
         else
             stat();
+        // TODO: 简单起见，主函数只有一个 return 语句
+        if (!expect(Tag.RETURN))
+            body();
     }
 
     /**
@@ -177,6 +184,10 @@ public class RecursiveDescent {
             }
             match(Tag.SEMICOLON);   // 暂时设置为赋值语句一定以;结尾
         }
+        if (expect(Tag.IDENTIFY))
+            assign();
+        if (expect(Tag.IF))
+            ifStat();
     }
 
 
@@ -184,7 +195,20 @@ public class RecursiveDescent {
      * if 条件句
      */
     private void ifStat(){
-
+        match(Tag.IF);match(Tag.LEFT_BRACKET);
+        bool();
+        match(Tag.RIGHT_BRACKET);
+        if (expect(Tag.LEFT_FBRACKET))
+            block();
+        else
+            stat();
+        if (expect(Tag.ELSE)){
+            move();
+            if (expect(Tag.LEFT_FBRACKET))
+                block();
+            else
+                stat();
+        }
     }
 
     /**
@@ -193,10 +217,13 @@ public class RecursiveDescent {
     private void block(){
         if (expect(Tag.LEFT_FBRACKET)){ // { 打头
             match(Tag.LEFT_FBRACKET);
-
+            if (expect(Tag.IDENTIFY))
+                assign();
+            else if (expect(Tag.IF))
+                ifStat();
             match(Tag.RIGHT_FBRACKET);  // } 结束 block
-        }
-
+        }else if (expect(Tag.IDENTIFY))
+            stat();
     }
 
 
@@ -206,13 +233,28 @@ public class RecursiveDescent {
     private void stat(){
         if (expect(Tag.IDENTIFY))
             assign();
+        else if (expect(Tag.IF))
+            ifStat();
     }
 
     /**
      * bool 条件句，用于判断
      */
     private void bool(){
+        double left = expr();
+        if (!isComparableSymbols(peek().getType()))
+            error();
+        String compareSymbol = SymbolTable.TAG2SYMBOL.get(move().getType());
+        double right = expr();
+    }
 
+    /**
+     * 判断当前类型是否是比较字符
+     * @param type 当前类型号
+     * @return 是否是比较字符
+     */
+    private boolean isComparableSymbols(int type){
+        return SymbolTable.COMPAREWORDS.contains(type);
     }
 
     /**
@@ -223,7 +265,9 @@ public class RecursiveDescent {
         double result = term();
         boolean hasMore = true;
         while (hasMore){
-            if (expect(Tag.SEMICOLON) || expect(Tag.COMMA))   // 表达式读取完毕
+            if (peek() == null)
+                break;
+            if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType()) || expect(Tag.RIGHT_BRACKET))   // 表达式读取完毕
                 break;
             Token token = peek();
             if(token.getType() == Tag.PLUS || token.getType() == Tag.MINUS){
@@ -249,7 +293,9 @@ public class RecursiveDescent {
     private double term(){
         double result = factor();
         while (true){
-            if (expect(Tag.SEMICOLON) || expect(Tag.COMMA))   // 表达式读取完毕
+            if (peek() == null)
+                break;
+            if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType()) || expect(Tag.RIGHT_BRACKET))   // 表达式读取完毕
                 break;
             Token token = peek();
             if(token.getType() == Tag.MULTI || token.getType() == Tag.DIV){
@@ -291,8 +337,10 @@ public class RecursiveDescent {
             move();
         }else if (token.getType() == Tag.IDENTIFY){ // id 转数字
             Token tmp = SymbolTable.SYMBOLES.get(token.getContent());
-            if (tmp == null)
+            if (tmp == null){
+                System.err.println("未找到标识符"+token.getContent());
                 error();
+            }
             if (tmp.getType() != Tag.INT && tmp.getType() != Tag.DOUBLE)
                 error();
             if (tmp.getType() == Tag.INT)
@@ -300,11 +348,10 @@ public class RecursiveDescent {
             else
                 result = Double.parseDouble(tmp.getContent());
             move();
-        }else if (expect(Tag.SEMICOLON) || expect(Tag.COMMA))   // , ; do nothing
+        }else if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType()))   // , ; do nothing
             ;
-        else{
-            throw new MyException(-1,-1);
-        }
+        else
+            error();
         return result;
     }
 

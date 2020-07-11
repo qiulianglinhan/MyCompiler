@@ -1,15 +1,13 @@
 package common;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class SymbolTable {
     public static Set<String> KEYWORDS = new HashSet<>();
     public static Map<String,Integer> SYMBOL2TAG = new HashMap<>();
     public static Map<Integer,String> TAG2SYMBOL = new HashMap<>();
-    
+    public static Stack<Token> TOEKNS = new Stack<>();  // 存放 Token 对象
+    public static Map<String,Token> SYMBOLES = new HashMap<>();
 
     static {
         // keywords begin

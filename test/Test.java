@@ -5,8 +5,19 @@ import java.util.Set;
 
 public class Test {
     public static void main(String[] args) {
-        System.out.println(symbol.KEYWORDS.contains("ll"));
-        System.out.println(symbol.maps.get(">>"));
+//        System.out.println(symbol.KEYWORDS.contains("ll"));
+//        System.out.println(symbol.maps.get(">>"));
+        int a = 1;
+        switch (a){
+            case -1:
+                System.out.println("-1");
+                break;
+            case -2:
+                System.out.println("-2");
+                break;
+            default:
+                System.out.println("-1");
+        }
     }
 }
 

@@ -16,6 +16,7 @@ public class MyException extends RuntimeException {
     public static final int IDENTIFYNOTFOUND = 8;
     public static final int RELERROR = 9;
     public static final int UNKNOWWORD = 10;
+    public static final int SYNTAXERROR = 11;
 
     /**
      * 自定义异常
@@ -43,6 +44,8 @@ public class MyException extends RuntimeException {
             printRelError(line);
         }else if (errorCode == UNKNOWWORD){
             printUnknowWordError(line);
+        }else if (errorCode == SYNTAXERROR){
+            printSyntaxError(line);
         }
         else {
             unkonwError();
@@ -97,6 +100,11 @@ public class MyException extends RuntimeException {
     private void printUnknowWordError(int line){
         System.err.println(line+"行出现未知符号");
         System.exit(Exit.UNKNOWWORDERROR);
+    }
+
+    private void printSyntaxError(int line){
+        System.err.println(line+"行出现语法错误");
+        System.exit(Exit.SYNTAXERROR);
     }
 
     private void unkonwError(){

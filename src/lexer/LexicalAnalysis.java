@@ -3,8 +3,11 @@ package lexer;
 import common.MyException;
 import common.SymbolTable;
 import common.Tag;
+import common.Token;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class LexicalAnalysis {
     private LexScanner lexScanner;
@@ -14,6 +17,8 @@ public class LexicalAnalysis {
     private char pch;
     private int categoryCode = 0;
     private int line = 1;
+
+    private ArrayList<Token> tokens = new ArrayList<>();    // 存放词法单元，此处为了避免不再从文件读取
 
     public LexicalAnalysis(String filename) throws IOException {
         lexScanner = new LexScanner(filename);
@@ -316,6 +321,7 @@ public class LexicalAnalysis {
             }
 
             // skip space, line comment, block comment.
+            // Those signs needn't write to lex file
             if (token.equals("") || token.equals("//") || token.equals("/*") || token.equals("*/")){
                 token = "";
                 description = "";
@@ -333,6 +339,11 @@ public class LexicalAnalysis {
             else
                 categoryCode = Tag.IDENTIFY;
             outMidFile();
+
+            // add to tokens arraylist
+            tokens.add(new Token(categoryCode,token,line));
+
+            // reinitialize
             description = "";
             token = "";
 
@@ -341,6 +352,12 @@ public class LexicalAnalysis {
         // 最后手动关闭流
         if (lexScanner.closeStream())
             System.out.println("词法分析成功，生成词法文件为"+lexScanner.getOutMidFileName());
+
+        // put stack
+        Collections.reverse(tokens);
+        SymbolTable.TOEKNS.addAll(tokens);
+//        System.out.println(SymbolTable.TOEKNS.peek());
+
     }
 
     //输出二元式,向中间文件写入二元式
@@ -348,6 +365,5 @@ public class LexicalAnalysis {
         System.out.println("["+categoryCode+","+token+"]");
         lexScanner.writeToFile(categoryCode,token,line);
     }
-
 
 }

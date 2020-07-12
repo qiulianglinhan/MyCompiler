@@ -1,4 +1,4 @@
-package LL1;
+package LL1.departed;
 
 import common.Exit;
 import common.MyException;
@@ -16,6 +16,7 @@ import java.util.List;
  * term = factor | * | /
  * factor = (expr) | num
  */
+@Deprecated
 public class Expression {
 
     private List<Token> list;

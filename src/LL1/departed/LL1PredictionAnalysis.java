@@ -1,8 +1,9 @@
-package LL1;
+package LL1.departed;
 
 import java.io.*;
 import java.util.*;
 
+@Deprecated
 public class LL1PredictionAnalysis {
     private BufferedReader br = null;   // 输入二元式
     private static List<String> inputStream = new ArrayList<>();    // 从二元式拆解输入流

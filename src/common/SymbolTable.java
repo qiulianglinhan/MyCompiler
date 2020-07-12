@@ -9,6 +9,7 @@ public class SymbolTable {
     public static Map<Integer,String> TAG2SYMBOL = new HashMap<>();
     public static Stack<Token> TOEKNS = new Stack<>();  // 存放 Token 对象
     public static Map<String,Token> SYMBOLES = new HashMap<>();
+    public static int tmpVariable = 0;
 
     static {
         // keywords begin
@@ -55,6 +56,10 @@ public class SymbolTable {
         COMPAREWORDS.add(Tag.GE);COMPAREWORDS.add(Tag.LE);COMPAREWORDS.add(Tag.NE);
         // compare words end
 
+    }
+
+    public static String getNewTmpVariable(){
+        return "$"+tmpVariable++;
     }
 
 }

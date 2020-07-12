@@ -1,4 +1,4 @@
-package inter;
+package inter.sub;
 
 import common.Tag;
 import common.Token;
@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+@Deprecated
 public class Inter {
 
     public static Map<String, Token> declaration;

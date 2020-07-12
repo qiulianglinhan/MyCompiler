@@ -1,6 +1,6 @@
-package inter;
+package inter.sub;
 
-import LL1.Expression;
+import LL1.departed.Expression;
 import common.MyException;
 import common.Token;
 
@@ -9,6 +9,7 @@ import java.util.ArrayList;
 /**
  * 表达式比较
  */
+@Deprecated
 public class Rel {
 
     private Expression leftExpression,rightExpression;

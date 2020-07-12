@@ -1,6 +1,6 @@
-package inter;
+package inter.sub;
 
-import LL1.Expression;
+import LL1.departed.Expression;
 import common.*;
 
 import java.util.ArrayList;
@@ -9,6 +9,7 @@ import java.util.ArrayList;
  * 赋值语句
  * S -> id = Expression
  */
+@Deprecated
 public class Assign {
     private int type;                       // id类型
     private ArrayList<Token> arrayList;     // 赋值语句序列

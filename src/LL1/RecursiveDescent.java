@@ -1,11 +1,17 @@
 package LL1;
 
 import common.*;
+import inter.FourFormula;
+
+import java.util.Stack;
 
 public class RecursiveDescent {
 
+    private Stack<Object> stack;
+
 
     public RecursiveDescent(){
+        stack = new Stack<>();
         program();
     }
 
@@ -113,12 +119,21 @@ public class RecursiveDescent {
                     move();
                     if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                         error();
+                    /*
                     Token t = move();
                     if (t.getType() == Tag.NUMINT)
                         value = Integer.parseInt(t.getContent());
                     SymbolTable.SYMBOLES.put(idName, new Num(Tag.INT, t.getContent(), t.getLine(), value, true));
-                } else  // 不存在赋值操作，初始化 value 为 0
+                     */
+                    // 改为 expr -- 2020-7-12 10：58
+                    Token t = peek();
+                    value = (int)wrapExpr();
+                    SymbolTable.SYMBOLES.put(idName, new Num(Tag.INT, String.valueOf(value), t.getLine(), value, true));
+                    genAssignCode(idName);
+                } else {  // 不存在赋值操作，初始化 value 为 0
                     SymbolTable.SYMBOLES.put(idName, new Num(Tag.INT, "0", peek().getLine(), 0, false));
+                    genNotAssignCode(idName);
+                }
                 if (expect(Tag.COMMA)) {
                     move(); // skip ,
                     declaration(Tag.INT);   // 继承变量类型
@@ -137,12 +152,23 @@ public class RecursiveDescent {
                     move();
                     if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                         error();
+                    /*
                     Token t = move();
                     if (t.getType() == Tag.NUMDOUBLE)
                         value = Double.parseDouble(t.getContent());
                     SymbolTable.SYMBOLES.put(idName, new Real(Tag.DOUBLE, t.getContent(), t.getLine(), value, true));
-                } else  // 不存在赋值操作，初始化 value 为 0
+
+                     */
+                    // 改为 expr -- 2020-7-12 10：58
+                    Token t = peek();
+                    value = wrapExpr();
+                    SymbolTable.SYMBOLES.put(idName, new Real(Tag.DOUBLE, String.valueOf(value), t.getLine(), value, true));
+                    genAssignCode(idName);
+
+                } else {  // 不存在赋值操作，初始化 value 为 0
                     SymbolTable.SYMBOLES.put(idName, new Real(Tag.DOUBLE, "0.0", peek().getLine(), 0, false));
+                    genNotAssignCode(idName);
+                }
                 if (expect(Tag.COMMA)) {
                     move(); // skip ,
                     declaration(Tag.DOUBLE);   // 继承变量类型
@@ -173,7 +199,7 @@ public class RecursiveDescent {
                 move();
                 if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                     error();
-                double value = expr();
+                double value = wrapExpr();
                 if (t.getType() == Tag.INT){
                     Num num = (Num)t;
                     SymbolTable.SYMBOLES.put(idName,new Num(Tag.INT,String.valueOf((int)value),t.getLine(),(int)value,num.isInit()));
@@ -181,6 +207,8 @@ public class RecursiveDescent {
                     Real real = (Real)t;
                     SymbolTable.SYMBOLES.put(idName,new Real(Tag.DOUBLE,String.valueOf(value),t.getLine(),value,real.isInit()));
                 }
+                // add assign four formula
+                genAssignCode(idName);
             }
             match(Tag.SEMICOLON);   // 暂时设置为赋值语句一定以;结尾
         }
@@ -241,11 +269,11 @@ public class RecursiveDescent {
      * bool 条件句，用于判断
      */
     private void bool(){
-        double left = expr();
+        double left = wrapExpr();
         if (!isComparableSymbols(peek().getType()))
             error();
         String compareSymbol = SymbolTable.TAG2SYMBOL.get(move().getType());
-        double right = expr();
+        double right = wrapExpr();
     }
 
     /**
@@ -256,6 +284,16 @@ public class RecursiveDescent {
     private boolean isComparableSymbols(int type){
         return SymbolTable.COMPAREWORDS.contains(type);
     }
+
+    /**
+     * 包装 expr 表达式，此处为设计四元式而编写
+     * @return 表达式值
+     */
+    private double wrapExpr(){
+        stack.clear();
+        return expr();
+    }
+
 
     /**
      * 表达式求值
@@ -275,10 +313,15 @@ public class RecursiveDescent {
                 if (!(expect(Tag.IDENTIFY) || expect(Tag.NUMDOUBLE) || expect(Tag.NUMINT) || expect(Tag.LEFT_BRACKET)))
                     throw new MyException(MyException.EXPRESSIONERROR, token.getLine());
                 double value = term();
-                if(token.getType() == Tag.PLUS)
+                if(token.getType() == Tag.PLUS){
+                    genCode(SymbolTable.TAG2SYMBOL.get(Tag.PLUS));
                     result += value;
-                else
+                }
+                else{
+                    genCode(SymbolTable.TAG2SYMBOL.get(Tag.MINUS));
                     result -= value;
+                }
+
             }else{
                 hasMore = false;
             }
@@ -303,11 +346,15 @@ public class RecursiveDescent {
                 if (!(expect(Tag.IDENTIFY) || expect(Tag.NUMDOUBLE) || expect(Tag.NUMINT) || expect(Tag.LEFT_BRACKET)))
                     throw new MyException(MyException.EXPRESSIONERROR,token.getLine());
                 double value = factor();
-                if(token.getType() == Tag.MULTI)
+                if(token.getType() == Tag.MULTI){
+                    genCode(SymbolTable.TAG2SYMBOL.get(Tag.MULTI));
                     result *= value;
+                }
+
                 else{
                     if(value == 0)
                         throw new MyException(MyException.DIVERROR,token.getLine());
+                    genCode(SymbolTable.TAG2SYMBOL.get(Tag.DIV));
                     result /= value;
                 }
             }else
@@ -331,9 +378,11 @@ public class RecursiveDescent {
             match(Tag.RIGHT_BRACKET);   // 读取右括号
         }else if (token.getType() == Tag.NUMINT){  // 常数
             result = Integer.parseInt(token.getContent());
+            stack.push(token.getContent());
             move();
         }else if(token.getType() == Tag.NUMDOUBLE){
             result = Double.parseDouble(token.getContent());
+            stack.push(token.getContent());
             move();
         }else if (token.getType() == Tag.IDENTIFY){ // id 转数字
             Token tmp = SymbolTable.SYMBOLES.get(token.getContent());
@@ -343,6 +392,7 @@ public class RecursiveDescent {
             }
             if (tmp.getType() != Tag.INT && tmp.getType() != Tag.DOUBLE)
                 error();
+            stack.push(token.getContent());
             if (tmp.getType() == Tag.INT)
                 result = Integer.parseInt(tmp.getContent());
             else
@@ -355,5 +405,41 @@ public class RecursiveDescent {
         return result;
     }
 
+    /**
+     * 生成四元式
+     * @param op 操作符
+     */
+    private void genCode(String op){
+        Object arg2 = stack.pop();
+        Object arg1 = stack.pop();
+        String newTmpVariable = SymbolTable.getNewTmpVariable();
+        FourFormula.gen(op,arg1,arg2,newTmpVariable);
+        stack.push(newTmpVariable);
+    }
+
+    /**
+     * 赋值语句生成四元式
+     * @param name 需要与临时变量替换的id
+     */
+    private void genAssignCode(String name){
+        Object arg1 = stack.pop();
+        stack.push(name);
+        FourFormula.gen("=",arg1,null,name);
+    }
+
+    /**
+     * 对于未赋值的声明语句，默认将id赋值为0
+     * @param name 未赋值id
+     */
+    private void genNotAssignCode(String name){
+        FourFormula.gen("=",0,null,name);
+    }
 }
 
+/*
+表达式求值递归写法
+https://blog.csdn.net/qq_36081539/article/details/79678090?utm_source=blogxgwz0
+expr = term | + | -
+term = factor | * | /
+factor = (expr) | num
+ */

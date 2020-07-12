@@ -1,6 +1,6 @@
-package inter;
+package inter.sub;
 
-import LL1.Expression;
+import LL1.departed.Expression;
 import common.*;
 
 import java.util.ArrayList;
@@ -12,6 +12,7 @@ import java.util.ArrayList;
  * T -> id D | id = Expression D
  * D -> ,T | ;
  */
+@Deprecated
 public class Dec {
 
     private int type;                       // 声明语句类型

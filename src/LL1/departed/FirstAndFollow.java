@@ -1,4 +1,4 @@
-package LL1;
+package LL1.departed;
 
 import java.util.*;
 
@@ -29,6 +29,7 @@ import java.util.*;
 
  * */
 
+@Deprecated
 public class FirstAndFollow {
     // 终结符
     private List<Character> Vt = new ArrayList<>();

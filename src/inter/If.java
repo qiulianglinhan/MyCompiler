@@ -1,5 +1,5 @@
 package inter;
 
-public class IF {
+public class If {
 
 }

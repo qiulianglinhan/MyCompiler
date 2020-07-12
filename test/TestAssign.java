@@ -1,8 +1,8 @@
 import common.Tag;
 import common.Token;
-import inter.Assign;
-import inter.Dec;
-import inter.Inter;
+import inter.sub.Assign;
+import inter.sub.Dec;
+import inter.sub.Inter;
 
 import java.util.ArrayList;
 

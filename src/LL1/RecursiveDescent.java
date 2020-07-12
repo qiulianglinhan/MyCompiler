@@ -1,8 +1,11 @@
 package LL1;
 
 import common.*;
+import inter.Else;
 import inter.FourFormula;
+import inter.If;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 public class RecursiveDescent {
@@ -13,6 +16,9 @@ public class RecursiveDescent {
     public RecursiveDescent(){
         stack = new Stack<>();
         program();
+        for (int i = 0; i < SymbolTable.fourFormulas.size(); i++) {
+            System.out.println(i+":"+SymbolTable.fourFormulas.get(i));
+        }
     }
 
     /**
@@ -212,10 +218,10 @@ public class RecursiveDescent {
             }
             match(Tag.SEMICOLON);   // 暂时设置为赋值语句一定以;结尾
         }
-        if (expect(Tag.IDENTIFY))
-            assign();
-        if (expect(Tag.IF))
-            ifStat();
+//        if (expect(Tag.IDENTIFY))
+//            assign();
+//        if (expect(Tag.IF))
+//            ifStat();
     }
 
 
@@ -224,18 +230,23 @@ public class RecursiveDescent {
      */
     private void ifStat(){
         match(Tag.IF);match(Tag.LEFT_BRACKET);
-        bool();
+        ArrayList<String> list = bool();
+        int ifBefore = If.gen(list.get(1),list.get(0),list.get(2));
         match(Tag.RIGHT_BRACKET);
         if (expect(Tag.LEFT_FBRACKET))
             block();
         else
             stat();
+        // 回填
+        If.backPatch(ifBefore);
         if (expect(Tag.ELSE)){
             move();
+            int elseBefore = Else.gen();
             if (expect(Tag.LEFT_FBRACKET))
                 block();
             else
                 stat();
+            Else.backPatch(ifBefore,elseBefore);
         }
     }
 
@@ -245,13 +256,14 @@ public class RecursiveDescent {
     private void block(){
         if (expect(Tag.LEFT_FBRACKET)){ // { 打头
             match(Tag.LEFT_FBRACKET);
-            if (expect(Tag.IDENTIFY))
-                assign();
-            else if (expect(Tag.IF))
-                ifStat();
+            while (true){   // 多条 statements
+                if (expect(Tag.IDENTIFY) || expect(Tag.IF))
+                    stat();
+                else
+                    break;
+            }
             match(Tag.RIGHT_FBRACKET);  // } 结束 block
-        }else if (expect(Tag.IDENTIFY))
-            stat();
+        }
     }
 
 
@@ -267,13 +279,18 @@ public class RecursiveDescent {
 
     /**
      * bool 条件句，用于判断
+     * @return 返回结果列表，list[0]表示比较式左边表达式结果，list[1]表示比较符号，list[2]表示比较式右边表达式结果
      */
-    private void bool(){
-        double left = wrapExpr();
+    private ArrayList<String> bool(){
+        ArrayList<String> list = new ArrayList<>();
+        wrapExpr();
+        list.add(stack.peek().toString());
         if (!isComparableSymbols(peek().getType()))
             error();
-        String compareSymbol = SymbolTable.TAG2SYMBOL.get(move().getType());
-        double right = wrapExpr();
+        list.add(SymbolTable.TAG2SYMBOL.get(move().getType()));
+        wrapExpr();
+        list.add(stack.peek().toString());
+        return list;
     }
 
     /**
@@ -286,7 +303,8 @@ public class RecursiveDescent {
     }
 
     /**
-     * 包装 expr 表达式，此处为设计四元式而编写
+     * 包装 expr 表达式，此处为设计四元式而编写，注意stack只在调用该方法时才清空
+     * 每次使用完不清空是用于其他方法需要当前栈中存放的变量名
      * @return 表达式值
      */
     private double wrapExpr(){

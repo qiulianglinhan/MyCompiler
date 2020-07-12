@@ -1,5 +1,7 @@
 package common;
 
+import inter.FourFormula;
+
 import java.util.*;
 
 public class SymbolTable {
@@ -10,6 +12,7 @@ public class SymbolTable {
     public static Stack<Token> TOEKNS = new Stack<>();  // 存放 Token 对象
     public static Map<String,Token> SYMBOLES = new HashMap<>();
     public static int tmpVariable = 0;
+    public static ArrayList<FourFormula> fourFormulas = new ArrayList<>();  // 存放四元式序列
 
     static {
         // keywords begin

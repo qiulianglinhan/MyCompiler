@@ -17,6 +17,7 @@ public class MyException extends RuntimeException {
     public static final int RELERROR = 9;
     public static final int UNKNOWWORD = 10;
     public static final int SYNTAXERROR = 11;
+    public static final int FOURFORMULAERROR = 12;
 
     /**
      * 自定义异常
@@ -46,6 +47,8 @@ public class MyException extends RuntimeException {
             printUnknowWordError(line);
         }else if (errorCode == SYNTAXERROR){
             printSyntaxError(line);
+        }else if (errorCode == FOURFORMULAERROR){
+            printFourFormulaError(line);
         }
         else {
             unkonwError();
@@ -105,6 +108,11 @@ public class MyException extends RuntimeException {
     private void printSyntaxError(int line){
         System.err.println(line+"行出现语法错误");
         System.exit(Exit.SYNTAXERROR);
+    }
+
+    private void printFourFormulaError(int line){
+        System.err.println(line+"行四元式错误");
+        System.exit(Exit.FOURFORMULAERROR);
     }
 
     private void unkonwError(){

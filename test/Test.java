@@ -22,6 +22,12 @@ public class Test {
         Object b = "aaa";
         System.out.println(a+" "+a.getClass());
         System.out.println(b+" "+b.getClass());
+
+        String s = "goto 29";
+        String[] ss = s.split(" ");
+        for (String s1 : ss) {
+            System.out.println(s1);
+        }
     }
 }
 

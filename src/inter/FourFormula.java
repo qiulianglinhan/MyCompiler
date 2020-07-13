@@ -2,27 +2,25 @@ package inter;
 
 import common.SymbolTable;
 
-import java.util.ArrayList;
-
 /**
  * 四元式
  */
 public class FourFormula {
 
     private final String op;      // 符号
-    private final Object arg1;    // 参数一
-    private final Object arg2;    // 参数二
-    private Object result;  // 结果
+    private final String arg1;    // 参数一
+    private final String arg2;    // 参数二
+    private String result;  // 结果
     private static int line = 0;  // 存放生成四元式行号
 
-    public FourFormula(String op, Object arg1,Object arg2, Object result){
+    public FourFormula(String op, String arg1,String arg2, String result){
         this.op = op;
         this.arg1 = arg1;
         this.arg2 = arg2;
         this.result = result;
     }
 
-    public static void gen(String op, Object arg1,Object arg2, Object result){
+    public static void gen(String op, String arg1,String arg2, String result){
         if (arg1 == null)
             arg1 = "_";
         if (arg2 == null)
@@ -36,11 +34,23 @@ public class FourFormula {
         return line;
     }
 
-    public Object getResult() {
+    public String getResult() {
         return result;
     }
 
-    public void setResult(Object result) {
+    public String getOp() {
+        return op;
+    }
+
+    public String getArg1() {
+        return arg1;
+    }
+
+    public String getArg2() {
+        return arg2;
+    }
+
+    public void setResult(String result) {
         this.result = result;
     }
 

@@ -11,7 +11,7 @@ public class If {
      * @param arg2 操作数2
      * @return 返回需要回填的行号
      */
-    public static int gen(String op,Object arg1,Object arg2){
+    public static int gen(String op,String arg1,String arg2){
         FourFormula.gen(op,arg1,arg2,"goto "+String.valueOf(FourFormula.getLine()+2));
         FourFormula.gen("goto",null,null,"?");
         return FourFormula.getLine()-1;

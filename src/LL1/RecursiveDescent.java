@@ -12,13 +12,18 @@ public class RecursiveDescent {
 
     private Stack<Object> stack;
 
-
-    public RecursiveDescent(){
+    /**
+     * 构造函数
+     * @param verbose 是否显示当前四元式
+     */
+    public RecursiveDescent(boolean verbose){
         stack = new Stack<>();
         program();
-        for (int i = 0; i < SymbolTable.fourFormulas.size(); i++) {
-            System.out.println(i+":"+SymbolTable.fourFormulas.get(i));
-        }
+        if (verbose)
+            for (int i = 0; i < SymbolTable.fourFormulas.size(); i++) {
+                System.out.println(i+":"+SymbolTable.fourFormulas.get(i));
+            }
+
     }
 
     /**
@@ -125,12 +130,6 @@ public class RecursiveDescent {
                     move();
                     if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                         error();
-                    /*
-                    Token t = move();
-                    if (t.getType() == Tag.NUMINT)
-                        value = Integer.parseInt(t.getContent());
-                    SymbolTable.SYMBOLES.put(idName, new Num(Tag.INT, t.getContent(), t.getLine(), value, true));
-                     */
                     // 改为 expr -- 2020-7-12 10：58
                     Token t = peek();
                     value = (int)wrapExpr();
@@ -158,13 +157,6 @@ public class RecursiveDescent {
                     move();
                     if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                         error();
-                    /*
-                    Token t = move();
-                    if (t.getType() == Tag.NUMDOUBLE)
-                        value = Double.parseDouble(t.getContent());
-                    SymbolTable.SYMBOLES.put(idName, new Real(Tag.DOUBLE, t.getContent(), t.getLine(), value, true));
-
-                     */
                     // 改为 expr -- 2020-7-12 10：58
                     Token t = peek();
                     value = wrapExpr();
@@ -218,10 +210,6 @@ public class RecursiveDescent {
             }
             match(Tag.SEMICOLON);   // 暂时设置为赋值语句一定以;结尾
         }
-//        if (expect(Tag.IDENTIFY))
-//            assign();
-//        if (expect(Tag.IF))
-//            ifStat();
     }
 
 
@@ -424,6 +412,24 @@ public class RecursiveDescent {
     }
 
     /**
+     * Object 类转字符串，用于四元式
+     * @param obj 需要转换的变量
+     * @return  转换后的
+     */
+    private String object2String(Object obj){
+        String res;
+        if (obj instanceof Integer)
+            res = String.valueOf(obj);
+        else if (obj instanceof Double)
+            res = String.valueOf(obj);
+        else if (obj instanceof String)
+            res = obj.toString();
+        else
+            res = null;
+        return res;
+    }
+
+    /**
      * 生成四元式
      * @param op 操作符
      */
@@ -431,7 +437,7 @@ public class RecursiveDescent {
         Object arg2 = stack.pop();
         Object arg1 = stack.pop();
         String newTmpVariable = SymbolTable.getNewTmpVariable();
-        FourFormula.gen(op,arg1,arg2,newTmpVariable);
+        FourFormula.gen(op,object2String(arg1),object2String(arg2),newTmpVariable);
         stack.push(newTmpVariable);
     }
 
@@ -442,7 +448,7 @@ public class RecursiveDescent {
     private void genAssignCode(String name){
         Object arg1 = stack.pop();
         stack.push(name);
-        FourFormula.gen("=",arg1,null,name);
+        FourFormula.gen("=",object2String(arg1),null,name);
     }
 
     /**
@@ -450,7 +456,7 @@ public class RecursiveDescent {
      * @param name 未赋值id
      */
     private void genNotAssignCode(String name){
-        FourFormula.gen("=",0,null,name);
+        FourFormula.gen("=","0",null,name);
     }
 }
 

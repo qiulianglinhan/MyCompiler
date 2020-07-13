@@ -13,6 +13,7 @@ public class SymbolTable {
     public static Map<String,Token> SYMBOLES = new HashMap<>();
     public static int tmpVariable = 0;
     public static ArrayList<FourFormula> fourFormulas = new ArrayList<>();  // 存放四元式序列
+    public static ArrayList<String> operator = new ArrayList<>();
 
     static {
         // keywords begin
@@ -59,6 +60,9 @@ public class SymbolTable {
         COMPAREWORDS.add(Tag.GE);COMPAREWORDS.add(Tag.LE);COMPAREWORDS.add(Tag.NE);
         // compare words end
 
+        // operator begin
+        operator.add("+");operator.add("-");operator.add("*");operator.add("/");
+        // operator end
     }
 
     public static String getNewTmpVariable(){

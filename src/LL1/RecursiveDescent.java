@@ -6,11 +6,14 @@ import inter.FourFormula;
 import inter.If;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 
 public class RecursiveDescent {
 
     private Stack<Object> stack;
+    private Map<String,String> arrayPointRecord;    // 用于生成四元式数组索引的指针
 
     /**
      * 构造函数
@@ -18,6 +21,7 @@ public class RecursiveDescent {
      */
     public RecursiveDescent(boolean verbose){
         stack = new Stack<>();
+        arrayPointRecord = new HashMap<>();
         program();
         if (verbose)
             for (int i = 0; i < SymbolTable.fourFormulas.size(); i++) {
@@ -95,6 +99,7 @@ public class RecursiveDescent {
         // program end
         match(Tag.RETURN);match(Tag.NUMINT);match(Tag.SEMICOLON);
         match(Tag.RIGHT_FBRACKET);
+        System.out.println("语法分析成功");
     }
 
     /**
@@ -115,7 +120,7 @@ public class RecursiveDescent {
     }
 
     /**
-     * 声明语句处理
+     * 声明语句处理，当前array暂时只支持声明，不能赋值
      * @param type 声明变量类型，-1 为 "," 分割时传递变量使用
      */
     private void declaration(int type){
@@ -135,7 +140,17 @@ public class RecursiveDescent {
                     value = (int)wrapExpr();
                     SymbolTable.SYMBOLES.put(idName, new Num(Tag.INT, String.valueOf(value), t.getLine(), value, true));
                     genAssignCode(idName);
-                } else {  // 不存在赋值操作，初始化 value 为 0
+                }else if (peek().getType() == Tag.LEFT_SQUARE_BRACKET){ // array declaration
+                    move();
+                    Token t = peek();
+                    value = Integer.parseInt(match(Tag.NUMINT).getContent());
+                    match(Tag.RIGHT_SQUARE_BRACKET);
+                    if (!(expect(Tag.SEMICOLON) || expect(Tag.COMMA))) // end error
+                        error();
+                    SymbolTable.SYMBOLES.put(idName,new Array(value,Tag.ARRAYINT,t.getLine()));
+                    genArrayDeclarationCode(idName,value);
+                }
+                else {  // 不存在赋值操作，初始化 value 为 0
                     SymbolTable.SYMBOLES.put(idName, new Num(Tag.INT, "0", peek().getLine(), 0, false));
                     genNotAssignCode(idName);
                 }
@@ -162,8 +177,18 @@ public class RecursiveDescent {
                     value = wrapExpr();
                     SymbolTable.SYMBOLES.put(idName, new Real(Tag.DOUBLE, String.valueOf(value), t.getLine(), value, true));
                     genAssignCode(idName);
-
-                } else {  // 不存在赋值操作，初始化 value 为 0
+                }else if (peek().getType() == Tag.LEFT_SQUARE_BRACKET){ // array declaration
+                    move();
+                    Token t = peek();
+                    int v = Integer.parseInt(match(Tag.NUMINT).getContent());
+                    match(Tag.RIGHT_SQUARE_BRACKET);
+                    if (!(expect(Tag.SEMICOLON) || expect(Tag.COMMA))) // end error
+                        error();
+                    SymbolTable.SYMBOLES.put(idName,new Array(v,Tag.ARRAYDOUBLE,t.getLine()));
+                    // TODO: array gen
+                    genArrayDeclarationCode(idName,v);
+                }
+                else {  // 不存在赋值操作，初始化 value 为 0
                     SymbolTable.SYMBOLES.put(idName, new Real(Tag.DOUBLE, "0.0", peek().getLine(), 0, false));
                     genNotAssignCode(idName);
                 }
@@ -207,11 +232,60 @@ public class RecursiveDescent {
                 }
                 // add assign four formula
                 genAssignCode(idName);
+            }else if (expect(Tag.LEFT_SQUARE_BRACKET)){
+                move();
+                int index = getArrayIndex();
+                arrayPointRecord.put(idName,stack.peek().toString());
+                Array array;
+                if (SymbolTable.SYMBOLES.get(idName) instanceof Array)
+                    array = (Array)  SymbolTable.SYMBOLES.get(idName);
+                else
+                    throw new MyException(MyException.ARRAYERROR,t.getLine());
+                if (index < 0 || index >= array.getSize())
+                    throw new MyException(MyException.ARRAYINDEXOUTOFBOUNDS,peek().getLine());
+                match(Tag.RIGHT_SQUARE_BRACKET);
+                if (expect(Tag.ASSIGN)){    // 数组赋值
+                    move();
+                    if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
+                        error();
+                    double value = wrapExpr();
+                    if (array.getType() == Tag.ARRAYINT){
+                        array.getArray().set(index,(int)value);
+                    }else{
+                        array.getArray().set(index,value);
+                    }
+                    genAssignCode(idName+"["+arrayPointRecord.get(idName)+"]");
+                }
             }
             match(Tag.SEMICOLON);   // 暂时设置为赋值语句一定以;结尾
         }
     }
 
+    /**
+     * 用于数组赋值语句的索引操作
+     * @return token代表的索引值
+     */
+    private int getArrayIndex(){
+        int index;
+        double value = wrapExpr();
+        if (isIntegerForDouble(value))
+            index = (int) value;
+        else{
+            System.err.println("数组索引必须是整型数字");
+            throw new MyException(MyException.ARRAYINDEXERROR,peek().getLine());
+        }
+        return index;
+    }
+
+    /**
+     * 判断double是否是整数
+     * @param obj 待判断数字
+     * @return 是否为整型数字
+     */
+    private boolean isIntegerForDouble(double obj) {
+        double eps = 1e-10;  // 精度范围
+        return obj-Math.floor(obj) < eps;
+    }
 
     /**
      * if 条件句
@@ -300,7 +374,6 @@ public class RecursiveDescent {
         return expr();
     }
 
-
     /**
      * 表达式求值
      * @return 表达式值
@@ -311,7 +384,9 @@ public class RecursiveDescent {
         while (hasMore){
             if (peek() == null)
                 break;
-            if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType()) || expect(Tag.RIGHT_BRACKET))   // 表达式读取完毕
+            // 表达式结束标志，逗号分号，比较符号，右括号（if语句使用），右方括号（数组使用）
+            if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType())
+                    || expect(Tag.RIGHT_BRACKET) || expect(Tag.RIGHT_SQUARE_BRACKET))   // 表达式读取完毕
                 break;
             Token token = peek();
             if(token.getType() == Tag.PLUS || token.getType() == Tag.MINUS){
@@ -344,7 +419,8 @@ public class RecursiveDescent {
         while (true){
             if (peek() == null)
                 break;
-            if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType()) || expect(Tag.RIGHT_BRACKET))   // 表达式读取完毕
+            if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType())
+                    || expect(Tag.RIGHT_BRACKET) || expect(Tag.RIGHT_SQUARE_BRACKET))   // 表达式读取完毕
                 break;
             Token token = peek();
             if(token.getType() == Tag.MULTI || token.getType() == Tag.DIV){
@@ -457,6 +533,15 @@ public class RecursiveDescent {
      */
     private void genNotAssignCode(String name){
         FourFormula.gen("=","0",null,name);
+    }
+
+    /**
+     * 对于数组声明，需要生成四元式
+     * @param name 数组名称
+     * @param size 数组大小
+     */
+    private void genArrayDeclarationCode(String name,int size){
+        FourFormula.gen("array",object2String(size),null,name);
     }
 }
 

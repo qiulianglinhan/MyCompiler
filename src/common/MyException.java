@@ -18,6 +18,9 @@ public class MyException extends RuntimeException {
     public static final int UNKNOWWORD = 10;
     public static final int SYNTAXERROR = 11;
     public static final int FOURFORMULAERROR = 12;
+    public static final int ARRAYINDEXERROR = 13;
+    public static final int ARRAYERROR = 14;
+    public static final int ARRAYINDEXOUTOFBOUNDS = 15;
 
     /**
      * 自定义异常
@@ -49,6 +52,12 @@ public class MyException extends RuntimeException {
             printSyntaxError(line);
         }else if (errorCode == FOURFORMULAERROR){
             printFourFormulaError(line);
+        }else if (errorCode == ARRAYINDEXERROR){
+            printArrayIndexError(line);
+        }else if (errorCode == ARRAYERROR){
+            printArrayError(line);
+        }else if (errorCode == ARRAYINDEXOUTOFBOUNDS){
+            printArrayIndexOutOfBounds(line);
         }
         else {
             unkonwError();
@@ -113,6 +122,21 @@ public class MyException extends RuntimeException {
     private void printFourFormulaError(int line){
         System.err.println(line+"行四元式错误");
         System.exit(Exit.FOURFORMULAERROR);
+    }
+
+    private void printArrayIndexError(int line){
+        System.err.println(line+"行数组索引错误");
+        System.exit(Exit.ARRAYINDEXERROR);
+    }
+
+    private void printArrayError(int line){
+        System.err.println(line+"行数组转换错误");
+        System.exit(Exit.ARRAYERROR);
+    }
+
+    private void printArrayIndexOutOfBounds(int line){
+        System.err.println(line+"行出现数组越界异常");
+        System.exit(Exit.ARRAYINDEXOUTOFBOUNDS);
     }
 
     private void unkonwError(){

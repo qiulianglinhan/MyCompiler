@@ -1,4 +1,4 @@
-package inter.sub;
+package inter.departed;
 
 import common.Tag;
 import common.Token;

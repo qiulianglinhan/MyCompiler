@@ -12,5 +12,6 @@ public class ApplicationRun {
         new RecursiveDescent(true);
         new RunFourFormula();
         System.out.println(Result.RESULT);
+        System.out.println(Result.ARRAYRESULT);
     }
 }

@@ -4,7 +4,9 @@ import common.MyException;
 import common.SymbolTable;
 import common.Tag;
 import inter.FourFormula;
+import inter.InterArray;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +15,7 @@ public class RunFourFormula {
 
     private int curPoint = 0;
     private Map<String,Double> map = new HashMap<>();
-
+    private Map<String, InterArray>  arrayMap = new HashMap<>();
 
     public RunFourFormula(){
         new Result();
@@ -30,20 +32,43 @@ public class RunFourFormula {
         String res = fourFormula.getResult();
         if (op.equals("=")){   // assign
             double value = getArgValue(arg1);
-            map.put(res,value);
-            if (res.charAt(0) != '$')
-                Result.RESULT.put(res,value);
+            if (!res.contains("[")){
+                map.put(res,value);
+                if (res.charAt(0) != '$')   // 非临时变量放入结果集
+                    Result.RESULT.put(res,value);
+            }
+            else{   // 数组元素赋值
+                int leftSquareBracketIndex = res.indexOf('[');
+                int rightSquareBracketIndex = res.indexOf(']');
+                String index = res.substring(leftSquareBracketIndex+1,rightSquareBracketIndex);
+                String idName = res.substring(0,leftSquareBracketIndex);
+                int arrayIndex;
+                if (Character.isDigit(index.charAt(0)))
+                    arrayIndex = Integer.parseInt(index);
+                else
+                    arrayIndex = map.get(index).intValue();
+                arrayMap.get(idName).getArray().set(arrayIndex,value);
+                Result.ARRAYRESULT.get(idName).set(arrayIndex,value);
+            }
+
         }else if (SymbolTable.COMPAREWORDS.contains(SymbolTable.SYMBOL2TAG.get(op))){
             if (compare(op,getArgValue(arg1),getArgValue(arg2)))   // 满足条件，走result的goto
                 curPoint++; // if返回true时候，当前指针实际是 if的下面第二行
-        }else if (op.equals("goto"))
+        }else if (op.equals("goto")){
             curPoint = Integer.parseInt(res);
-        else if (SymbolTable.operator.contains(op)){
+        }else if (SymbolTable.operator.contains(op)){
             double value = getOperatorValue(op,getArgValue(arg1),getArgValue(arg2));
             map.put(res,value);
             if (res.charAt(0) != '$')
                 Result.RESULT.put(res,value);
-        }else
+        }else if (op.equals("array")){
+            arrayMap.put(res,new InterArray((int)getArgValue(arg1)));
+            ArrayList<Number> arrayList = new ArrayList<>();
+            int size = (int)getArgValue(arg1);
+            initAnArray(size,arrayList);
+            Result.ARRAYRESULT.put(res,arrayList);
+        }
+        else
             throw new MyException(MyException.FOURFORMULAERROR,curPoint);
     }
 
@@ -103,6 +128,17 @@ public class RunFourFormula {
             return value1/value2;
         else
             throw new MyException(MyException.FOURFORMULAERROR,curPoint);
+    }
+
+    /**
+     * 初始化数组
+     * @param size 数组大小
+     * @param arrayList 待初始化的数组
+     */
+    private void initAnArray(int size, ArrayList<Number> arrayList){
+        for (int i = 0; i < size; i++) {
+            arrayList.add(0);
+        }
     }
 
 }

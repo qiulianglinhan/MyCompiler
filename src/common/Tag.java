@@ -17,11 +17,12 @@ public class Tag {
     MINUSEQ = 325, MULTIEQ = 326, DIVEQ = 327;
 
     public static final int
-    NUMINT = 401, NUMDOUBLE = 402;
+    NUMINT = 401, NUMDOUBLE = 402, ARRAYINT = 403, ARRAYDOUBLE = 404;
 
     public static final int
     LEFT_BRACKET = 501, RIGHT_BRACKET = 502, LEFT_FBRACKET = 503, RIGHT_FBRACKET = 504,
-    COMMA = 505, SEMICOLON = 506, DOUBLE_QUOTATION = 507, QUOTATION = 508;
+    COMMA = 505, SEMICOLON = 506, DOUBLE_QUOTATION = 507, QUOTATION = 508,
+    LEFT_SQUARE_BRACKET=509, RIGHT_SQUARE_BRACKET=510;
 
     public static final int
     IDENTIFY = 601;
@@ -29,14 +30,14 @@ public class Tag {
 }
 /*
 关键字：
-if else break continue do while for true false void main int double
+if else break continue do while for true false void main int double return
 
 运算符号：
 + - * / % = > < >= <= == != ++ -- && ||
 
 数字符号：
-int double
+int double int_array double_array
 
 符号：
-( ) { } , ; " '
+( ) { } , ; " ' [ ]
  */

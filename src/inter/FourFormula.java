@@ -25,7 +25,6 @@ public class FourFormula {
             arg1 = "_";
         if (arg2 == null)
             arg2 = "_";
-        //System.out.println("["+op+","+arg1+","+arg2+","+result+"]");
         SymbolTable.fourFormulas.add(new FourFormula(op,arg1,arg2,result));
         line++; // add 1 automatically
     }

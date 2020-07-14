@@ -1,7 +1,7 @@
 import common.Tag;
 import common.Token;
-import inter.sub.Dec;
-import inter.sub.Inter;
+import inter.departed.Dec;
+import inter.departed.Inter;
 
 import java.util.ArrayList;
 

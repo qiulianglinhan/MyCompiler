@@ -1,4 +1,4 @@
-package inter.sub;
+package inter.departed;
 
 import LL1.departed.Expression;
 import common.MyException;

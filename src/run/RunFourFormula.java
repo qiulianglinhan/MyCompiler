@@ -81,7 +81,18 @@ public class RunFourFormula {
         double value;
         if (Character.isDigit(arg.charAt(0)))
             value = Double.parseDouble(arg);
-        else
+        else if (arg.contains("[")){
+            int leftSquareBracketIndex = arg.indexOf('[');
+            int rightSquareBracketIndex = arg.indexOf(']');
+            String index = arg.substring(leftSquareBracketIndex+1,rightSquareBracketIndex);
+            String idName = arg.substring(0,leftSquareBracketIndex);
+            int arrayIndex;
+            if (Character.isDigit(index.charAt(0)))
+                arrayIndex = Integer.parseInt(index);
+            else
+                arrayIndex = map.get(index).intValue();
+            value = arrayMap.get(idName).getArray().get(arrayIndex).doubleValue();
+        }else
             value = map.get(arg);
         return value;
     }

@@ -21,6 +21,7 @@ public class MyException extends RuntimeException {
     public static final int ARRAYINDEXERROR = 13;
     public static final int ARRAYERROR = 14;
     public static final int ARRAYINDEXOUTOFBOUNDS = 15;
+    public static final int ARRAYIDENTIFYNOTFOUNDERROR = 16;
 
     /**
      * 自定义异常
@@ -58,6 +59,8 @@ public class MyException extends RuntimeException {
             printArrayError(line);
         }else if (errorCode == ARRAYINDEXOUTOFBOUNDS){
             printArrayIndexOutOfBounds(line);
+        }else if (errorCode == ARRAYIDENTIFYNOTFOUNDERROR){
+            printArrayIdentificationNotFoundError(line);
         }
         else {
             unkonwError();
@@ -137,6 +140,11 @@ public class MyException extends RuntimeException {
     private void printArrayIndexOutOfBounds(int line){
         System.err.println(line+"行出现数组越界异常");
         System.exit(Exit.ARRAYINDEXOUTOFBOUNDS);
+    }
+
+    private void printArrayIdentificationNotFoundError(int line){
+        System.err.println(line+"行数组标识符未找到");
+        System.exit(Exit.ARRAYIDENTIFYNOTFOUNDERROR);
     }
 
     private void unkonwError(){

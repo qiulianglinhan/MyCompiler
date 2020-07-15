@@ -14,6 +14,7 @@ public class RecursiveDescent {
 
     private Stack<Object> stack;
     private Map<String,String> arrayPointRecord;    // 用于生成四元式数组索引的指针
+    private static boolean inArray = false;
 
     /**
      * 构造函数
@@ -431,9 +432,7 @@ public class RecursiveDescent {
                 if(token.getType() == Tag.MULTI){
                     genCode(SymbolTable.TAG2SYMBOL.get(Tag.MULTI));
                     result *= value;
-                }
-
-                else{
+                } else {
                     if(value == 0)
                         throw new MyException(MyException.DIVERROR,token.getLine());
                     genCode(SymbolTable.TAG2SYMBOL.get(Tag.DIV));
@@ -472,14 +471,36 @@ public class RecursiveDescent {
                 System.err.println("未找到标识符"+token.getContent());
                 error();
             }
-            if (tmp.getType() != Tag.INT && tmp.getType() != Tag.DOUBLE)
-                error();
-            stack.push(token.getContent());
-            if (tmp.getType() == Tag.INT)
-                result = Integer.parseInt(tmp.getContent());
-            else
-                result = Double.parseDouble(tmp.getContent());
             move();
+            if (!expect(Tag.LEFT_SQUARE_BRACKET)){  // not array
+                if (tmp.getType() != Tag.INT && tmp.getType() != Tag.DOUBLE)
+                    error();
+                stack.push(token.getContent());
+                if (tmp.getType() == Tag.INT)
+                    result = Integer.parseInt(tmp.getContent());
+                else
+                    result = Double.parseDouble(tmp.getContent());
+            }else{  // an array
+                move();     // skip '['
+                if (!(expect(Tag.IDENTIFY) || expect(Tag.NUMDOUBLE) || expect(Tag.NUMINT) || expect(Tag.LEFT_BRACKET)))
+                    throw new MyException(MyException.EXPRESSIONERROR,token.getLine());
+                inArray = true;     // modify state
+                result = expr();
+                inArray = false;    // reverse state
+                if (!isIntegerForDouble(result)){
+                    System.out.println("数组索引非整型数值");
+                    throw new MyException(MyException.ARRAYINDEXERROR,peek().getLine());
+                }
+                int index = (int)result;
+                if (!(SymbolTable.SYMBOLES.get(token.getContent()) instanceof Array))
+                    throw new MyException(MyException.ARRAYIDENTIFYNOTFOUNDERROR,peek().getLine());
+                Array array = (Array) SymbolTable.SYMBOLES.get(token.getContent());
+                if (index < 0 || index >= array.getSize())
+                    throw new MyException(MyException.ARRAYINDEXOUTOFBOUNDS,peek().getLine());
+                result = array.getArray().get(index).intValue();
+                match(Tag.RIGHT_SQUARE_BRACKET);    // match ']'
+                stack.push(token.getContent()+"["+stack.pop().toString()+"]");
+            }
         }else if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType()))   // , ; do nothing
             ;
         else

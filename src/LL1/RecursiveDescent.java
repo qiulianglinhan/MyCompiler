@@ -4,6 +4,7 @@ import common.*;
 import inter.Else;
 import inter.FourFormula;
 import inter.If;
+import inter.While;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,9 +13,8 @@ import java.util.Stack;
 
 public class RecursiveDescent {
 
-    private Stack<Object> stack;
+    private Stack<Object> stack;                    // 运算时临时产生的变量存放于此
     private Map<String,String> arrayPointRecord;    // 用于生成四元式数组索引的指针
-    private static boolean inArray = false;
 
     /**
      * 构造函数
@@ -289,6 +289,24 @@ public class RecursiveDescent {
     }
 
     /**
+     * while语句
+     * while本身可分解为if语句，不同的是在if语句最后面加一个强制跳转至if语句开始，并进行判断
+     */
+    private void whileStat(){
+        match(Tag.WHILE);match(Tag.LEFT_BRACKET);
+        ArrayList<String> list = bool();
+        int ifBefore = If.gen(list.get(1),list.get(0),list.get(2));
+        match(Tag.RIGHT_BRACKET);
+        if (expect(Tag.LEFT_FBRACKET))
+            block();
+        else
+            stat();
+        While.genBackStat(ifBefore-1);
+        // 回填
+        If.backPatch(ifBefore);
+    }
+
+    /**
      * if 条件句
      */
     private void ifStat(){
@@ -338,6 +356,8 @@ public class RecursiveDescent {
             assign();
         else if (expect(Tag.IF))
             ifStat();
+        else if (expect(Tag.WHILE))
+            whileStat();
     }
 
     /**
@@ -484,9 +504,7 @@ public class RecursiveDescent {
                 move();     // skip '['
                 if (!(expect(Tag.IDENTIFY) || expect(Tag.NUMDOUBLE) || expect(Tag.NUMINT) || expect(Tag.LEFT_BRACKET)))
                     throw new MyException(MyException.EXPRESSIONERROR,token.getLine());
-                inArray = true;     // modify state
                 result = expr();
-                inArray = false;    // reverse state
                 if (!isIntegerForDouble(result)){
                     System.out.println("数组索引非整型数值");
                     throw new MyException(MyException.ARRAYINDEXERROR,peek().getLine());
@@ -499,7 +517,7 @@ public class RecursiveDescent {
                     throw new MyException(MyException.ARRAYINDEXOUTOFBOUNDS,peek().getLine());
                 result = array.getArray().get(index).intValue();
                 match(Tag.RIGHT_SQUARE_BRACKET);    // match ']'
-                stack.push(token.getContent()+"["+stack.pop().toString()+"]");
+                stack.push(token.getContent()+"["+stack.pop().toString()+"]");  // 生成数组变量存入运算栈
             }
         }else if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType()))   // , ; do nothing
             ;

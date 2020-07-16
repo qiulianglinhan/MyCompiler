@@ -13,4 +13,6 @@ public class Exit {
     public static final int ARRAYERROR = -11;
     public static final int ARRAYINDEXOUTOFBOUNDS = -12;
     public static final int ARRAYIDENTIFYNOTFOUNDERROR = -13;
+    public static final int INCERROR = -14;
+    public static final int DECERRORR = -15;
 }

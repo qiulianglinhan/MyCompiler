@@ -11,7 +11,7 @@ public class MyException extends RuntimeException {
     public static final int DIVERROR = 3;
     public static final int BRACKETERROR = 4;
     public static final int EXPRESSIONERROR = 5;
-    public static final int DECERROR = 6;
+    public static final int DECERROR = 6;   // 声明错误
     public static final int IDENTIFYERROR = 7;
     public static final int IDENTIFYNOTFOUND = 8;
     public static final int RELERROR = 9;
@@ -22,6 +22,8 @@ public class MyException extends RuntimeException {
     public static final int ARRAYERROR = 14;
     public static final int ARRAYINDEXOUTOFBOUNDS = 15;
     public static final int ARRAYIDENTIFYNOTFOUNDERROR = 16;
+    public static final int INCERROR = 17;  // 自增错误
+    public static final int DECERRORR = 18; // 自减错误
 
     /**
      * 自定义异常
@@ -61,6 +63,10 @@ public class MyException extends RuntimeException {
             printArrayIndexOutOfBounds(line);
         }else if (errorCode == ARRAYIDENTIFYNOTFOUNDERROR){
             printArrayIdentificationNotFoundError(line);
+        }else if (errorCode == INCERROR){
+            printIncError(line);
+        }else if (errorCode == DECERRORR){
+            printDecError(line);
         }
         else {
             unkonwError();
@@ -145,6 +151,16 @@ public class MyException extends RuntimeException {
     private void printArrayIdentificationNotFoundError(int line){
         System.err.println(line+"行数组标识符未找到");
         System.exit(Exit.ARRAYIDENTIFYNOTFOUNDERROR);
+    }
+
+    private void printIncError(int line){
+        System.err.println(line+"行自增错误");
+        System.exit(Exit.INCERROR);
+    }
+
+    private void printDecError(int line){
+        System.err.println(line+"行自减错误");
+        System.exit(Exit.DECERRORR);
     }
 
     private void unkonwError(){

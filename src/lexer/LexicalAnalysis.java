@@ -20,6 +20,11 @@ public class LexicalAnalysis {
 
     private ArrayList<Token> tokens = new ArrayList<>();    // 存放词法单元，此处为了避免不再从文件读取
 
+    /**
+     * 词法分析
+     * @param filename 待词法分析的.c源文件
+     * @throws IOException 词法分析错误
+     */
     public LexicalAnalysis(String filename) throws IOException {
         lexScanner = new LexScanner(filename);
         this.lexicalAnalysisProcess();
@@ -214,16 +219,13 @@ public class LexicalAnalysis {
                 // ! 所有操作
                 case '!':
                     pch = lexScanner.next();
-                    switch(pch) {
-                        case '=':
-                            description = "不等于";
-                            token = "!=";
-                            break;
-                        default:
-                            description = "取反";
-                            token = "!";
-                            lexScanner.back(pch);
-                            break;
+                    if (pch == '=') {
+                        description = "不等于";
+                        token = "!=";
+                    } else {
+                        description = "取反";
+                        token = "!";
+                        lexScanner.back(pch);
                     }
                     break;
 

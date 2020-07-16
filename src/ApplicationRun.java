@@ -10,7 +10,7 @@ public class ApplicationRun {
         String fileName = "src\\test.c";
         new LexicalAnalysis(fileName);
         new RecursiveDescent(true);
-        new RunFourFormula();
+        new RunFourFormula(true,fileName);
         System.out.println(Result.RESULT);
         System.out.println(Result.ARRAYRESULT);
     }

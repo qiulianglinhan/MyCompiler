@@ -18,16 +18,18 @@ public class Test {
 //            default:
 //                System.out.println("-1");
 //        }
-        Object a = 1;
-        Object b = "aaa";
-        System.out.println(a+" "+a.getClass());
-        System.out.println(b+" "+b.getClass());
-
-        String s = "goto 29";
-        String[] ss = s.split(" ");
-        for (String s1 : ss) {
-            System.out.println(s1);
-        }
+//        Object a = 1;
+//        Object b = "aaa";
+//        System.out.println(a+" "+a.getClass());
+//        System.out.println(b+" "+b.getClass());
+//
+//        String s = "goto 29";
+//        String[] ss = s.split(" ");
+//        for (String s1 : ss) {
+//            System.out.println(s1);
+//        }
+        String fileName = "src//test.c";
+        System.out.println(fileName.substring(0,fileName.indexOf('.')));
     }
 }
 

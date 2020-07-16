@@ -20,7 +20,6 @@ public class Assign {
 
     public Assign(String idName,ArrayList<Token> arrayList){
         Token token = Inter.declaration.get(idName);
-        // TODO: line is -1 temporarily
         if (token == null){
             System.err.println("标识符"+idName+"未找到");
             throw new MyException(MyException.IDENTIFYNOTFOUND,-1);
@@ -109,7 +108,6 @@ public class Assign {
             t2 = "_";
         else
             t2 = arg2;
-        // TODO: opType uses "=" temporarily while map completed
         System.out.println("(=,"+t1+","+t2+","+result+")");
         return "(=,"+t1+","+t2+","+result+")";
     }

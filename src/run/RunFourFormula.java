@@ -6,19 +6,37 @@ import common.Tag;
 import inter.FourFormula;
 import inter.InterArray;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: 未完成将三地址码写入文件操作
 public class RunFourFormula {
 
     private int curPoint = 0;
     private Map<String,Double> map = new HashMap<>();
     private Map<String, InterArray>  arrayMap = new HashMap<>();
 
-    public RunFourFormula(){
+    /**
+     * 运行四元式，当前四元式执行是从内存直接运行，生成四元式文件仅仅为用户查看
+     * @param generateFourFormulaFile 是否生成四元式文件
+     * @param fileName 源文件名称，以.c结尾的文件，自动生成与.c文件名称相同的.ff文件，.ff文件为生成四元式文件
+     * @throws IOException 生成四元式文件错误
+     */
+    public RunFourFormula(boolean generateFourFormulaFile,String fileName) throws IOException {
         new Result();
+        if (generateFourFormulaFile){
+            String outMidFileName = fileName.substring(0,fileName.indexOf('.'))+".ff";
+            File fout = new File(outMidFileName);
+            FileWriter fw = new FileWriter(fout);
+            for (FourFormula fourFormula : SymbolTable.fourFormulas) {
+                fw.write(fourFormula.toString()+"\n");
+            }
+            fw.close();
+            System.out.println("生成四元式文件成功，生成文件名称为："+outMidFileName);
+        }
         while (curPoint < SymbolTable.fourFormulas.size()){
             parseFourFormula();
         }
@@ -26,6 +44,7 @@ public class RunFourFormula {
 
     private void parseFourFormula(){
         FourFormula fourFormula = SymbolTable.fourFormulas.get(curPoint++);
+
         String op = fourFormula.getOp();
         String arg1 = fourFormula.getArg1();
         String arg2 = fourFormula.getArg2();

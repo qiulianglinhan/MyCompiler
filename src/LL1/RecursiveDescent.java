@@ -111,7 +111,7 @@ public class RecursiveDescent {
         }
         else
             stat();
-        // TODO: 简单起见，主函数只有一个 return 语句
+        // @descrption: 简单起见，主函数只有一个 return 语句
         if (!expect(Tag.RETURN))
             body();
     }
@@ -182,7 +182,6 @@ public class RecursiveDescent {
                     if (!(expect(Tag.SEMICOLON) || expect(Tag.COMMA))) // end error
                         error();
                     SymbolTable.SYMBOLES.put(idName,new Array(v,Tag.ARRAYDOUBLE,t.getLine()));
-                    // TODO: array gen
                     genArrayDeclarationCode(idName,v);
                 }
                 else {  // 不存在赋值操作，初始化 value 为 0

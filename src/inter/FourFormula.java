@@ -53,6 +53,10 @@ public class FourFormula {
         this.result = result;
     }
 
+    public static void setLine(int line) {
+        FourFormula.line = line;
+    }
+
     @Override
     public String toString() {
         return "["+this.op+","+this.arg1+","+this.arg2+","+this.result+"]";

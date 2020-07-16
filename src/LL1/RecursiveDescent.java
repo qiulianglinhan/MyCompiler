@@ -1,20 +1,15 @@
 package LL1;
 
 import common.*;
-import inter.Else;
-import inter.FourFormula;
-import inter.If;
-import inter.While;
+import inter.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 public class RecursiveDescent {
 
     private Stack<Object> stack;                    // 运算时临时产生的变量存放于此
     private Map<String,String> arrayPointRecord;    // 用于生成四元式数组索引的指针
+    private Stack<For> forRecordStack;       // 用于处理for循环需要替换部分
 
     /**
      * 构造函数
@@ -23,6 +18,7 @@ public class RecursiveDescent {
     public RecursiveDescent(boolean verbose){
         stack = new Stack<>();
         arrayPointRecord = new HashMap<>();
+        forRecordStack = new Stack<>();
         program();
         if (verbose)
             for (int i = 0; i < SymbolTable.fourFormulas.size(); i++) {
@@ -231,6 +227,8 @@ public class RecursiveDescent {
                     Real real = (Real)t;
                     SymbolTable.SYMBOLES.put(idName,new Real(Tag.DOUBLE,String.valueOf(value),t.getLine(),value,real.isInit()));
                 }
+                if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
+                    forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
                 // add assign four formula
                 genAssignCode(idName);
             }else if (expect(Tag.LEFT_SQUARE_BRACKET)){
@@ -255,10 +253,13 @@ public class RecursiveDescent {
                     }else{
                         array.getArray().set(index,value);
                     }
+                    if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
+                        forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
                     genAssignCode(idName+"["+arrayPointRecord.get(idName)+"]");
                 }
             }
-            match(Tag.SEMICOLON);   // 暂时设置为赋值语句一定以;结尾
+            if (forRecordStack.size() > 0 && !forRecordStack.peek().getForStatAssign())
+                match(Tag.SEMICOLON);   // 暂时设置为赋值语句一定以;结尾
         }
     }
 
@@ -301,8 +302,46 @@ public class RecursiveDescent {
             block();
         else
             stat();
-        While.genBackStat(ifBefore-1);
-        // 回填
+        While.genBackStat(ifBefore-1);  // 跳转至if条件判断语句处
+        If.backPatch(ifBefore);
+    }
+
+    private void forStat(){
+        match(Tag.FOR);match(Tag.LEFT_BRACKET);
+        assign();   // for语句第一个赋值语句
+        if (expect(Tag.SEMICOLON))
+            move();
+        ArrayList<String> list = bool();    // for语句第二个比较语句
+        int ifBefore = If.gen(list.get(1),list.get(0),list.get(2));
+        if (expect(Tag.SEMICOLON))
+            move();
+
+        forRecordStack.push(new For(true));
+        assign();   // for语句第三个赋值语句
+        forRecordStack.peek().setForStatAssign(false);
+        match(Tag.RIGHT_BRACKET);
+
+        /***************************************/
+        int start = forRecordStack.peek().getForStatRecord().get(0);
+        ArrayList<FourFormula> arrayList = new ArrayList<>();
+        for (int i = 0; i < forRecordStack.peek().getForStatRecord().size(); i++) {
+            arrayList.add(SymbolTable.fourFormulas.remove(start));
+        }
+        FourFormula.setLine(FourFormula.getLine()-forRecordStack.peek().getForStatRecord().size());
+        /**************************************/
+
+        if (expect(Tag.LEFT_FBRACKET))
+            block();
+        else
+            stat();
+
+        /**************************************/
+        SymbolTable.fourFormulas.addAll(arrayList);
+        FourFormula.setLine(FourFormula.getLine()+forRecordStack.peek().getForStatRecord().size());
+        forRecordStack.pop();
+        /**************************************/
+
+        While.genBackStat(ifBefore-1);  // 跳转至if条件判断语句处
         If.backPatch(ifBefore);
     }
 
@@ -338,7 +377,7 @@ public class RecursiveDescent {
         if (expect(Tag.LEFT_FBRACKET)){ // { 打头
             match(Tag.LEFT_FBRACKET);
             while (true){   // 多条 statements
-                if (expect(Tag.IDENTIFY) || expect(Tag.IF))
+                if (expect(Tag.IDENTIFY) || expect(Tag.IF) || expect(Tag.WHILE) || expect(Tag.FOR))
                     stat();
                 else
                     break;
@@ -358,6 +397,8 @@ public class RecursiveDescent {
             ifStat();
         else if (expect(Tag.WHILE))
             whileStat();
+        else if (expect(Tag.FOR))
+            forStat();
     }
 
     /**
@@ -416,10 +457,14 @@ public class RecursiveDescent {
                     throw new MyException(MyException.EXPRESSIONERROR, token.getLine());
                 double value = term();
                 if(token.getType() == Tag.PLUS){
+                    if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
+                        forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
                     genCode(SymbolTable.TAG2SYMBOL.get(Tag.PLUS));
                     result += value;
                 }
                 else{
+                    if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
+                        forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
                     genCode(SymbolTable.TAG2SYMBOL.get(Tag.MINUS));
                     result -= value;
                 }
@@ -450,11 +495,15 @@ public class RecursiveDescent {
                     throw new MyException(MyException.EXPRESSIONERROR,token.getLine());
                 double value = factor();
                 if(token.getType() == Tag.MULTI){
+                    if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
+                        forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
                     genCode(SymbolTable.TAG2SYMBOL.get(Tag.MULTI));
                     result *= value;
                 } else {
                     if(value == 0)
                         throw new MyException(MyException.DIVERROR,token.getLine());
+                    if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
+                        forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
                     genCode(SymbolTable.TAG2SYMBOL.get(Tag.DIV));
                     result /= value;
                 }
@@ -519,7 +568,7 @@ public class RecursiveDescent {
                 match(Tag.RIGHT_SQUARE_BRACKET);    // match ']'
                 stack.push(token.getContent()+"["+stack.pop().toString()+"]");  // 生成数组变量存入运算栈
             }
-        }else if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType()))   // , ; do nothing
+        }else if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType()))   // , ; comparableSymbols do nothing
             ;
         else
             error();

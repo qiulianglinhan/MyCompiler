@@ -33,7 +33,7 @@ gen
 hs_err_pid*
 
 # test folder need not upload
-test
+test/*.java
 
 # .lex file is lexical file, ff file is four formula file
 *.lex

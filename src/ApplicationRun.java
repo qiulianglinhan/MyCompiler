@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class ApplicationRun {
     public static void main(String[] args) throws IOException {
-        String fileName = "testFiles\\WhileTest\\while.c";
+        String fileName = "test\\WhileTest\\while.c";
         new LexicalAnalysis(fileName);
         new RecursiveDescent(true);
         new RunFourFormula(true,fileName);

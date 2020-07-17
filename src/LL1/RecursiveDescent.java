@@ -139,7 +139,8 @@ public class RecursiveDescent {
                 }else if (peek().getType() == Tag.LEFT_SQUARE_BRACKET){ // array declaration
                     move();
                     Token t = peek();
-                    value = Integer.parseInt(Objects.requireNonNull(match(Tag.NUMINT)).getContent());
+//                    value = Integer.parseInt(Objects.requireNonNull(match(Tag.NUMINT)).getContent());
+                    value = (int)wrapExpr();
                     match(Tag.RIGHT_SQUARE_BRACKET);
                     if (!(expect(Tag.SEMICOLON) || expect(Tag.COMMA))) // end error
                         error();

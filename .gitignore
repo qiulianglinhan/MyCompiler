@@ -35,7 +35,6 @@ hs_err_pid*
 # test folder need not upload
 test
 
-# my test c file and .lex file which is defined by myself, ff file is four formula file
-*.c
+# .lex file is lexical file, ff file is four formula file
 *.lex
 *.ff

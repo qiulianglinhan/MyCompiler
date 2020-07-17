@@ -321,8 +321,4 @@ public class LL1PredictionAnalysis {
         return s;
     }
 
-//    public static void main(String[] args) {
-//        LL1PredictionAnalysis ll1PredictionAnalysis = new LL1PredictionAnalysis("E:\\ideaPro\\MyCompiler\\src\\LL1\\test.lex", true);
-//        ll1PredictionAnalysis.analysisProcessing();
-//    }
 }

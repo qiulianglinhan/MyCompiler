@@ -24,6 +24,8 @@ public class MyException extends RuntimeException {
     public static final int ARRAYIDENTIFYNOTFOUNDERROR = 16;
     public static final int INCERROR = 17;  // 自增错误
     public static final int DECERRORR = 18; // 自减错误
+    public static final int BREAKERROR = 19;
+    public static final int CONTINUEERROR = 20;
 
     /**
      * 自定义异常
@@ -67,8 +69,11 @@ public class MyException extends RuntimeException {
             printIncError(line);
         }else if (errorCode == DECERRORR){
             printDecError(line);
-        }
-        else {
+        }else if (errorCode == BREAKERROR){
+            printBreakError(line);
+        }else if (errorCode == CONTINUEERROR){
+            printContinueError(line);
+        } else {
             unkonwError();
         }
     }
@@ -161,6 +166,16 @@ public class MyException extends RuntimeException {
     private void printDecError(int line){
         System.err.println(line+"行自减错误");
         System.exit(Exit.DECERRORR);
+    }
+
+    private void printBreakError(int line){
+        System.err.println(line+"行break语句使用错误");
+        System.exit(Exit.BREAKERROR);
+    }
+
+    private void printContinueError(int line){
+        System.err.println(line+"行continue语句使用错误");
+        System.exit(Exit.CONTINUEERROR);
     }
 
     private void unkonwError(){

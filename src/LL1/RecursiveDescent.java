@@ -9,22 +9,37 @@ public class RecursiveDescent {
 
     private Stack<Object> stack;                    // 运算时临时产生的变量存放于此
     private Map<String,String> arrayPointRecord;    // 用于生成四元式数组索引的指针
-    private Stack<For> forRecordStack;       // 用于处理for循环需要替换部分
+    private Stack<For> forRecordStack;              // 用于处理for循环需要替换部分
+    private boolean inLoop;                         // 用于判定当前是否在循环中，适用于break关键字
+    private int loopNums;                           // 用于判定是否在loop嵌套中，0是无loop
+    private Stack<Break> breakStack;                // 存放一个block中break的位置
+    private Stack<Continue> continueStack;          // 存放一个block中continue的位置
 
     /**
      * 构造函数
      * @param verbose 是否显示当前四元式
      */
     public RecursiveDescent(boolean verbose){
-        stack = new Stack<>();
-        arrayPointRecord = new HashMap<>();
-        forRecordStack = new Stack<>();
+        init();
         program();
         if (verbose)
             for (int i = 0; i < SymbolTable.fourFormulas.size(); i++) {
                 System.out.println(i+":"+SymbolTable.fourFormulas.get(i));
             }
 
+    }
+
+    /**
+     * 一系列初始化操作
+     */
+    private void init(){
+        stack = new Stack<>();
+        arrayPointRecord = new HashMap<>();
+        forRecordStack = new Stack<>();
+        inLoop = false;
+        loopNums = 0;
+        breakStack = new Stack<>();
+        continueStack = new Stack<>();
     }
 
     /**
@@ -313,11 +328,88 @@ public class RecursiveDescent {
     }
 
     /**
+     * block 块，以 "{" 打头，以 "}"结束，中间是 statement
+     */
+    private void block(){
+        if (expect(Tag.LEFT_FBRACKET)){ // { 打头
+            match(Tag.LEFT_FBRACKET);
+            while (true){   // 多条 statements
+                if (expect(Tag.IDENTIFY) || expect(Tag.IF) || expect(Tag.WHILE)
+                        || expect(Tag.FOR) || expect(Tag.PLUSPLUS) || expect(Tag.MINUSMINUS))
+                    stat();
+                else
+                    break;
+            }
+            match(Tag.RIGHT_FBRACKET);  // } 结束 block
+        }
+    }
+
+
+    /**
+     * statement 语句，以 ";" 结束
+     */
+    private void stat(){
+        if (expect(Tag.IDENTIFY) || expect(Tag.PLUSPLUS) || expect(Tag.MINUSMINUS))
+            assign();
+        else if (expect(Tag.IF))
+            ifStat();
+        else if (expect(Tag.WHILE))
+            whileStat();
+        else if (expect(Tag.FOR))
+            forStat();
+        else if (expect(Tag.BREAK))
+            breakStat();
+        else if (expect(Tag.CONTINUE))
+            continueStat();
+    }
+
+    /**
+     * continue关键字
+     */
+    private void continueStat(){
+        if (expect(Tag.CONTINUE)){
+            if (!inLoop){
+                System.err.println("continue关键词未在循环范围内");
+                throw new MyException(MyException.CONTINUEERROR,peek().getLine());
+            }
+            match(Tag.CONTINUE);
+            match(Tag.SEMICOLON);
+            continueStack.peek().getContinueStack().push(Continue.genContinueCode());
+        }
+    }
+
+    /**
+     * break关键字
+     */
+    private void breakStat(){
+        if (expect(Tag.BREAK)){
+            if (!inLoop){
+                System.err.println("break关键词未在循环范围内");
+                throw new MyException(MyException.BREAKERROR,peek().getLine());
+            }
+            match(Tag.BREAK);
+            match(Tag.SEMICOLON);
+            breakStack.peek().getBreakStack().push(Break.genBreakCode());
+        }
+    }
+
+    /**
+     * 循环语句通用初始化，用于break和continue
+     */
+    private void loopCommonFunc(){
+        loopNums++;
+        inLoop = true;
+        breakStack.push(new Break());
+        continueStack.push(new Continue());
+    }
+
+    /**
      * while语句
      * while本身可分解为if语句，不同的是在if语句最后面加一个强制跳转至if语句开始，并进行判断
      */
     private void whileStat(){
         match(Tag.WHILE);match(Tag.LEFT_BRACKET);
+        loopCommonFunc();
         ArrayList<String> list = bool();
         int ifBefore = If.gen(list.get(1),list.get(0),list.get(2));
         match(Tag.RIGHT_BRACKET);
@@ -327,6 +419,19 @@ public class RecursiveDescent {
             stat();
         While.genBackStat(ifBefore-1);  // 跳转至if条件判断语句处
         If.backPatch(ifBefore);
+        if (!breakStack.empty()){
+            breakStack.peek().getBreakStack().forEach(Break::backPatchBreakCode);
+            breakStack.pop();
+        }
+        if (!continueStack.empty()){
+            for (Integer curLine : continueStack.peek().getContinueStack()) {
+                Continue.backPatchContinueCode(curLine,ifBefore-1);
+            }
+            continueStack.pop();
+        }
+        loopNums--;
+        if (loopNums==0)
+            inLoop = false;
     }
 
     /**
@@ -335,6 +440,7 @@ public class RecursiveDescent {
      */
     private void forStat(){
         match(Tag.FOR);match(Tag.LEFT_BRACKET);
+        loopCommonFunc();
         assign();   // for语句第一个赋值语句
         if (expect(Tag.SEMICOLON))
             move();
@@ -370,6 +476,19 @@ public class RecursiveDescent {
 
         While.genBackStat(ifBefore-1);  // 跳转至if条件判断语句处
         If.backPatch(ifBefore);
+        if (!breakStack.empty()){
+            breakStack.peek().getBreakStack().forEach(Break::backPatchBreakCode);
+            breakStack.pop();
+        }
+        if (!continueStack.empty()){
+            for (Integer curLine : continueStack.peek().getContinueStack()) {
+                Continue.backPatchContinueCode(curLine,SymbolTable.fourFormulas.size()-arrayList.size()-1);
+            }
+            continueStack.pop();
+        }
+        loopNums--;
+        if (loopNums == 0)
+            inLoop = false;
     }
 
     /**
@@ -430,37 +549,6 @@ public class RecursiveDescent {
         }
     }
 
-    /**
-     * block 块，以 "{" 打头，以 "}"结束，中间是 statement
-     */
-    private void block(){
-        if (expect(Tag.LEFT_FBRACKET)){ // { 打头
-            match(Tag.LEFT_FBRACKET);
-            while (true){   // 多条 statements
-                if (expect(Tag.IDENTIFY) || expect(Tag.IF) || expect(Tag.WHILE) || expect(Tag.FOR))
-                    stat();
-                else
-                    break;
-            }
-            match(Tag.RIGHT_FBRACKET);  // } 结束 block
-        }
-    }
-
-
-    /**
-     * statement 语句，以 ";" 结束
-     */
-    private void stat(){
-        if (expect(Tag.IDENTIFY) || expect(Tag.PLUSPLUS) || expect(Tag.MINUSMINUS))
-            assign();
-        else if (expect(Tag.IF))
-            ifStat();
-        else if (expect(Tag.WHILE))
-            whileStat();
-        else if (expect(Tag.FOR))
-            forStat();
-
-    }
 
     /**
      * bool 条件句，用于判断
@@ -699,8 +787,9 @@ public class RecursiveDescent {
      * @param name 自增变量
      */
     private void genIncDecCode(String op,String name){
-        FourFormula.gen(op,"1",name,name);
+        FourFormula.gen(op,name,"1",name);
     }
+
 }
 
 /*

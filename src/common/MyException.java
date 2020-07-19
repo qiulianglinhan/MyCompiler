@@ -26,6 +26,9 @@ public class MyException extends RuntimeException {
     public static final int DECERRORR = 18; // 自减错误
     public static final int BREAKERROR = 19;
     public static final int CONTINUEERROR = 20;
+    public static final int CASEERROR = 21; // case
+    public static final int DEFAULTERROR = 22;  // default
+    public static final int ELSEERROR = 23;     // else
 
     /**
      * 自定义异常
@@ -73,7 +76,14 @@ public class MyException extends RuntimeException {
             printBreakError(line);
         }else if (errorCode == CONTINUEERROR){
             printContinueError(line);
-        } else {
+        }else if (errorCode == CASEERROR){
+            printCaseError(line);
+        }else if (errorCode == DEFAULTERROR){
+            printDefaultError(line);
+        }else if (errorCode == ELSEERROR){
+            printElseError(line);
+        }
+        else {
             unkonwError();
         }
     }
@@ -176,6 +186,21 @@ public class MyException extends RuntimeException {
     private void printContinueError(int line){
         System.err.println(line+"行continue语句使用错误");
         System.exit(Exit.CONTINUEERROR);
+    }
+
+    private void printCaseError(int line){
+        System.err.println(line+"行case语句错误，未配合switch语句");
+        System.exit(Exit.CASEERROR);
+    }
+
+    private void printDefaultError(int line){
+        System.err.println(line+"行default语句错误，未配合switch语句");
+        System.exit(Exit.DEFAULTERROR);
+    }
+
+    private void printElseError(int line){
+        System.err.println(line+"行else语句错误");
+        System.exit(Exit.ELSEERROR);
     }
 
     private void unkonwError(){

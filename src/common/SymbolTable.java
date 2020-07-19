@@ -28,6 +28,7 @@ public class SymbolTable {
         SYMBOL2TAG.put("continue",Tag.CONTINUE);SYMBOL2TAG.put("do",Tag.DO);SYMBOL2TAG.put("while",Tag.WHILE);
         SYMBOL2TAG.put("for",Tag.FOR);SYMBOL2TAG.put("void",Tag.VOID);SYMBOL2TAG.put("main",Tag.MAIN);
         SYMBOL2TAG.put("int",Tag.INT);SYMBOL2TAG.put("double",Tag.DOUBLE);SYMBOL2TAG.put("return",Tag.RETURN);
+        SYMBOL2TAG.put("switch",Tag.SWITCH);SYMBOL2TAG.put("case",Tag.CASE);SYMBOL2TAG.put("default",Tag.DEFAULT);
         // keywords end
 
         // sign begin
@@ -49,6 +50,7 @@ public class SymbolTable {
         SYMBOL2TAG.put(",",Tag.COMMA);SYMBOL2TAG.put(";",Tag.SEMICOLON);
         SYMBOL2TAG.put("\"",Tag.DOUBLE_QUOTATION);SYMBOL2TAG.put("'",Tag.QUOTATION);
         SYMBOL2TAG.put("[",Tag.LEFT_SQUARE_BRACKET);SYMBOL2TAG.put("]",Tag.RIGHT_SQUARE_BRACKET);
+        SYMBOL2TAG.put(":",Tag.COLON);
         // sign end
         // symbol to tag end
         

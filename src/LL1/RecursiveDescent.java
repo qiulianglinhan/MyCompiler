@@ -7,7 +7,7 @@ import java.util.*;
 
 public class RecursiveDescent {
 
-    private Stack<Object> stack;                    // 运算时临时产生的变量存放于此
+    private Stack<Object> stack;                    // 表达式运算时临时产生的变量存放于此
     private Map<String,String> arrayPointRecord;    // 用于生成四元式数组索引的指针
     private Stack<For> forRecordStack;              // 用于处理for循环需要替换部分
     private boolean inLoop;                         // 用于判定当前是否在循环中，适用于break关键字
@@ -118,13 +118,27 @@ public class RecursiveDescent {
      * 程序体
      */
     private void body(){
-        if (expect(Tag.IF))
-            ifStat();
-        else if (expect(Tag.ELSE)) {  // 悬空 else
+        if (expect(Tag.CASE)){          // 悬空case
+            System.err.println(peek().getLine()+"行出现悬空case");
+            throw new MyException(MyException.CASEERROR,peek().getLine());
+        } else if (expect(Tag.DEFAULT)){// 悬空default
+            System.err.println(peek().getLine()+"行出现悬空default");
+            throw new MyException(MyException.DEFAULTERROR,peek().getLine());
+        } else if (expect(Tag.ELSE)) {  // 悬空 else
             System.err.println(peek().getLine()+"行出现悬空else");
-            error();
-        } else
-            stat();
+            throw new MyException(MyException.ELSEERROR,peek().getLine());
+        } else if (expect(Tag.INT) || expect(Tag.DOUBLE)){  // invalid declaration
+            System.err.println(peek().getLine()+"行出现新的声明");
+            throw new MyException(MyException.DECERROR,peek().getLine());
+        } else if (expect(Tag.BREAK)){
+            System.err.println(peek().getLine()+"行出现悬空break");
+            throw new MyException(MyException.BREAKERROR,peek().getLine());
+        }else if (expect(Tag.CONTINUE)){
+            System.err.println(peek().getLine()+"行出现悬空continue");
+            throw new MyException(MyException.CONTINUEERROR,peek().getLine());
+        }
+        else
+            block();
         // @descrption: 简单起见，主函数只有一个 return 语句
         if (!expect(Tag.RETURN))
             body();
@@ -341,7 +355,8 @@ public class RecursiveDescent {
                     break;
             }
             match(Tag.RIGHT_FBRACKET);  // } 结束 block
-        }
+        }else
+            stat();
     }
 
 
@@ -361,6 +376,66 @@ public class RecursiveDescent {
             breakStat();
         else if (expect(Tag.CONTINUE))
             continueStat();
+        else if (expect(Tag.SWITCH))
+            switchStat();
+    }
+
+    /**
+     * switch语句，当前设置的switch语句中case必须要有break关键字
+     */
+    private void switchStat(){
+        if (expect(Tag.SWITCH)){
+            match(Tag.SWITCH);
+            match(Tag.LEFT_BRACKET);
+            wrapExpr();
+            String idName = stack.peek().toString();
+            match(Tag.RIGHT_BRACKET);
+            match(Tag.LEFT_FBRACKET);
+            Stack<Integer> breakStack = new Stack<>();  // 存放break语句四元式索引
+            while (true){
+                if (expect(Tag.RIGHT_FBRACKET))
+                    break;
+                int ifBefore = 0;
+                if (expect(Tag.CASE)){
+                    while (true){
+                        if (expect(Tag.CASE)){
+                            match(Tag.CASE);
+                            wrapExpr();
+                            match(Tag.COLON);
+                            ifBefore = If.gen("==",stack.peek().toString(),idName);
+                        }else if (expect(Tag.BREAK)){ // 暂时设置为case一定有break关键字配合
+                            breakStack.push(Break.genBreakCode());
+                            If.backPatch(ifBefore);
+                            match(Tag.BREAK);
+                            match(Tag.SEMICOLON);
+                            break;
+                        }
+                        int size = SymbolTable.TOEKNS.size();
+                        block();
+                        if (SymbolTable.TOEKNS.size() == size)
+                            throw new MyException(MyException.CASEERROR,peek().getLine());
+                    }
+                }else if (expect(Tag.DEFAULT)){
+                    match(Tag.DEFAULT);
+                    match(Tag.COLON);
+                    while (true){
+                        if (expect(Tag.BREAK)){
+                            match(Tag.BREAK);
+                            match(Tag.SEMICOLON);
+                        }
+                        if (expect(Tag.RIGHT_FBRACKET))
+                            break;
+                        int size = SymbolTable.TOEKNS.size();
+                        block();
+                        if (SymbolTable.TOEKNS.size() == size)
+                            throw new MyException(MyException.DEFAULTERROR,peek().getLine());
+                    }
+                    break;
+                }
+            }
+            match(Tag.RIGHT_FBRACKET);
+            breakStack.forEach(Break::backPatchBreakCode);
+        }
     }
 
     /**
@@ -549,7 +624,6 @@ public class RecursiveDescent {
         }
     }
 
-
     /**
      * bool 条件句，用于判断
      * @return 返回结果列表，list[0]表示比较式左边表达式结果，list[1]表示比较符号，list[2]表示比较式右边表达式结果
@@ -595,9 +669,10 @@ public class RecursiveDescent {
         while (hasMore){
             if (peek() == null)
                 break;
-            // 表达式结束标志，逗号分号，比较符号，右括号（if语句使用），右方括号（数组使用）
+            // 表达式结束标志，逗号分号，比较符号，右括号（if语句使用），右方括号（数组使用），冒号（case语句）
             if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType())
-                    || expect(Tag.RIGHT_BRACKET) || expect(Tag.RIGHT_SQUARE_BRACKET))   // 表达式读取完毕
+                    || expect(Tag.RIGHT_BRACKET) || expect(Tag.RIGHT_SQUARE_BRACKET)
+                    || expect(Tag.COLON))   // 表达式读取完毕
                 break;
             Token token = peek();
             if(token.getType() == Tag.PLUS || token.getType() == Tag.MINUS){
@@ -635,7 +710,8 @@ public class RecursiveDescent {
             if (peek() == null)
                 break;
             if (expect(Tag.SEMICOLON) || expect(Tag.COMMA) || isComparableSymbols(peek().getType())
-                    || expect(Tag.RIGHT_BRACKET) || expect(Tag.RIGHT_SQUARE_BRACKET))   // 表达式读取完毕
+                    || expect(Tag.RIGHT_BRACKET) || expect(Tag.RIGHT_SQUARE_BRACKET)
+                    || expect(Tag.COLON))   // 表达式读取完毕
                 break;
             Token token = peek();
             if(token.getType() == Tag.MULTI || token.getType() == Tag.DIV){

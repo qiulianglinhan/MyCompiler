@@ -17,4 +17,7 @@ public class Exit {
     public static final int DECERRORR = -15;
     public static final int BREAKERROR = -16;
     public static final int CONTINUEERROR = -17;
+    public static final int CASEERROR = -18;
+    public static final int DEFAULTERROR = -19;
+    public static final int ELSEERROR = -20;
 }

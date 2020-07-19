@@ -283,6 +283,10 @@ public class LexicalAnalysis {
                     token = "]";
                     break;
 
+                case ':':
+                    token = ":";
+                    break;
+
                 case '\r':
                     // 读到\r表示开始读回车符，读取下一个\n;（Windows系统）
                     lexScanner.next();

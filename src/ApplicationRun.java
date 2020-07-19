@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class ApplicationRun {
     public static void main(String[] args) throws IOException {
-        String fileName = "test\\BreakAndContinueTest\\BreakAndContinueTest.c";
+        String fileName = "test\\SwitchTest\\SwitchTest.c";
         new LexicalAnalysis(fileName);
         new RecursiveDescent(true);
         new RunFourFormula(true,fileName);

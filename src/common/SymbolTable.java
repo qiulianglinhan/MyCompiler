@@ -9,8 +9,7 @@ public class SymbolTable {
     public static Set<Integer> COMPAREWORDS = new HashSet<>();      // 比较关键字
     public static Map<String,Integer> SYMBOL2TAG = new HashMap<>();
     public static Map<Integer,String> TAG2SYMBOL = new HashMap<>();
-    public static Stack<Token> TOEKNS = new Stack<>();              // 存放 Token 对象
-    public static Map<String,Token> SYMBOLES = new HashMap<>();
+    public static Stack<Token> TOKENS = new Stack<>();              // 存放 Token 对象
     private static int tmpVariable = 0;
     public static ArrayList<FourFormula> fourFormulas = new ArrayList<>();  // 存放四元式序列
     public static ArrayList<String> operator = new ArrayList<>();   // 存放加减乘除

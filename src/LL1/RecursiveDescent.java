@@ -14,6 +14,7 @@ public class RecursiveDescent {
     private int loopNums;                           // 用于判定是否在loop嵌套中，0是无loop
     private Stack<Break> breakStack;                // 存放一个block中break的位置
     private Stack<Continue> continueStack;          // 存放一个block中continue的位置
+    private Map<String,Token> SYMBOLS;              // 存放当前程序所有的符号对应的value
 
     /**
      * 构造函数
@@ -40,6 +41,7 @@ public class RecursiveDescent {
         loopNums = 0;
         breakStack = new Stack<>();
         continueStack = new Stack<>();
+        SYMBOLS = new HashMap<>();
     }
 
     /**
@@ -48,10 +50,10 @@ public class RecursiveDescent {
      * @return 是否为期盼符号
      */
     private boolean expect(int type){
-        if (SymbolTable.TOEKNS.peek() == null)
+        if (SymbolTable.TOKENS.peek() == null)
             return false;
         else
-            return SymbolTable.TOEKNS.peek().getType() == type;
+            return SymbolTable.TOKENS.peek().getType() == type;
     }
 
     /**
@@ -59,7 +61,7 @@ public class RecursiveDescent {
      * @return 返回移动的Token（如果有需要）
      */
     private Token move(){
-        return SymbolTable.TOEKNS.pop();
+        return SymbolTable.TOKENS.pop();
     }
 
     /**
@@ -75,14 +77,14 @@ public class RecursiveDescent {
     }
 
     private Token peek(){
-        return SymbolTable.TOEKNS.peek();
+        return SymbolTable.TOKENS.peek();
     }
 
     /**
      * 语法分析出错
      */
     private void error(){
-        throw new MyException(MyException.SYNTAXERROR,SymbolTable.TOEKNS.peek().getLine());
+        throw new MyException(MyException.SYNTAXERROR,SymbolTable.TOKENS.peek().getLine());
     }
 
     /**
@@ -163,7 +165,7 @@ public class RecursiveDescent {
                     // 改为 expr -- 2020-7-12 10：58
                     Token t = peek();
                     value = (int)wrapExpr();
-                    SymbolTable.SYMBOLES.put(idName, new Num(Tag.INT, String.valueOf(value), t.getLine(), value, true));
+                    this.SYMBOLS.put(idName, new Num(Tag.INT, String.valueOf(value), t.getLine(), value, true));
                     genAssignCode(idName);
                 }else if (peek().getType() == Tag.LEFT_SQUARE_BRACKET){ // array declaration
                     move();
@@ -173,11 +175,11 @@ public class RecursiveDescent {
                     match(Tag.RIGHT_SQUARE_BRACKET);
                     if (!(expect(Tag.SEMICOLON) || expect(Tag.COMMA))) // end error
                         error();
-                    SymbolTable.SYMBOLES.put(idName,new Array(value,Tag.ARRAYINT,t.getLine()));
+                    this.SYMBOLS.put(idName,new Array(value,Tag.ARRAYINT,t.getLine()));
                     genArrayDeclarationCode(idName,value);
                 }
                 else {  // 不存在赋值操作，初始化 value 为 0
-                    SymbolTable.SYMBOLES.put(idName, new Num(Tag.INT, "0", peek().getLine(), 0, false));
+                    this.SYMBOLS.put(idName, new Num(Tag.INT, "0", peek().getLine(), 0, false));
                     genNotAssignCode(idName);
                 }
                 if (expect(Tag.COMMA)) {
@@ -201,7 +203,7 @@ public class RecursiveDescent {
                     // 改为 expr -- 2020-7-12 10：58
                     Token t = peek();
                     value = wrapExpr();
-                    SymbolTable.SYMBOLES.put(idName, new Real(Tag.DOUBLE, String.valueOf(value), t.getLine(), value, true));
+                    this.SYMBOLS.put(idName, new Real(Tag.DOUBLE, String.valueOf(value), t.getLine(), value, true));
                     genAssignCode(idName);
                 }else if (peek().getType() == Tag.LEFT_SQUARE_BRACKET){ // array declaration
                     move();
@@ -210,11 +212,11 @@ public class RecursiveDescent {
                     match(Tag.RIGHT_SQUARE_BRACKET);
                     if (!(expect(Tag.SEMICOLON) || expect(Tag.COMMA))) // end error
                         error();
-                    SymbolTable.SYMBOLES.put(idName,new Array(v,Tag.ARRAYDOUBLE,t.getLine()));
+                    this.SYMBOLS.put(idName,new Array(v,Tag.ARRAYDOUBLE,t.getLine()));
                     genArrayDeclarationCode(idName,v);
                 }
                 else {  // 不存在赋值操作，初始化 value 为 0
-                    SymbolTable.SYMBOLES.put(idName, new Real(Tag.DOUBLE, "0.0", peek().getLine(), 0, false));
+                    this.SYMBOLS.put(idName, new Real(Tag.DOUBLE, "0.0", peek().getLine(), 0, false));
                     genNotAssignCode(idName);
                 }
                 if (expect(Tag.COMMA)) {
@@ -240,9 +242,9 @@ public class RecursiveDescent {
             assert t != null;   // t must not null
             assert t.getContent() != null && !t.getContent().equals("");  // content must not null
             String idName = t.getContent();
-            if (SymbolTable.SYMBOLES.get(idName) == null)
+            if (this.SYMBOLS.get(idName) == null)
                 throw new MyException(MyException.IDENTIFYNOTFOUND,t.getLine());
-            t = SymbolTable.SYMBOLES.get(idName);   // 原始 token 存储数字
+            t = this.SYMBOLS.get(idName);   // 原始 token 存储数字
             if (expect(Tag.ASSIGN)){
                 move();
                 if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
@@ -250,10 +252,10 @@ public class RecursiveDescent {
                 double value = wrapExpr();
                 if (t.getType() == Tag.INT){
                     Num num = (Num)t;
-                    SymbolTable.SYMBOLES.put(idName,new Num(Tag.INT,String.valueOf((int)value),t.getLine(),(int)value,num.isInit()));
+                    this.SYMBOLS.put(idName,new Num(Tag.INT,String.valueOf((int)value),t.getLine(),(int)value,num.isInit()));
                 }else{
                     Real real = (Real)t;
-                    SymbolTable.SYMBOLES.put(idName,new Real(Tag.DOUBLE,String.valueOf(value),t.getLine(),value,real.isInit()));
+                    this.SYMBOLS.put(idName,new Real(Tag.DOUBLE,String.valueOf(value),t.getLine(),value,real.isInit()));
                 }
                 if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
                     forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
@@ -264,8 +266,8 @@ public class RecursiveDescent {
                 int index = getArrayIndex();
                 arrayPointRecord.put(idName,stack.peek().toString());
                 Array array;
-                if (SymbolTable.SYMBOLES.get(idName) instanceof Array)
-                    array = (Array)  SymbolTable.SYMBOLES.get(idName);
+                if (this.SYMBOLS.get(idName) instanceof Array)
+                    array = (Array)  this.SYMBOLS.get(idName);
                 else
                     throw new MyException(MyException.ARRAYERROR,t.getLine());
                 if (index < 0 || index >= array.getSize())
@@ -287,16 +289,16 @@ public class RecursiveDescent {
                 }
             }else if (expect(Tag.PLUSPLUS) || expect(Tag.MINUSMINUS)){
                 int type = move().getType();
-                if (SymbolTable.SYMBOLES.get(idName).getType() == Tag.INT) {  // identification
+                if (this.SYMBOLS.get(idName).getType() == Tag.INT) {  // identification
                     Num num = (Num) t;
                     int value = num.getValue();
                     if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
                         forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
                     if (type == Tag.PLUSPLUS){
-                        SymbolTable.SYMBOLES.put(idName,new Num(Tag.INT,String.valueOf(value+1),t.getLine(),value+1,num.isInit()));
+                        this.SYMBOLS.put(idName,new Num(Tag.INT,String.valueOf(value+1),t.getLine(),value+1,num.isInit()));
                         genIncDecCode("+",idName);
                     }else{
-                        SymbolTable.SYMBOLES.put(idName,new Num(Tag.INT,String.valueOf(value-1),t.getLine(),value-1,num.isInit()));
+                        this.SYMBOLS.put(idName,new Num(Tag.INT,String.valueOf(value-1),t.getLine(),value-1,num.isInit()));
                         genIncDecCode("-",idName);
                     }
                 }
@@ -410,9 +412,9 @@ public class RecursiveDescent {
                             match(Tag.SEMICOLON);
                             break;
                         }
-                        int size = SymbolTable.TOEKNS.size();
+                        int size = SymbolTable.TOKENS.size();
                         block();
-                        if (SymbolTable.TOEKNS.size() == size)
+                        if (SymbolTable.TOKENS.size() == size)
                             throw new MyException(MyException.CASEERROR,peek().getLine());
                     }
                 }else if (expect(Tag.DEFAULT)){
@@ -425,9 +427,9 @@ public class RecursiveDescent {
                         }
                         if (expect(Tag.RIGHT_FBRACKET))
                             break;
-                        int size = SymbolTable.TOEKNS.size();
+                        int size = SymbolTable.TOKENS.size();
                         block();
-                        if (SymbolTable.TOEKNS.size() == size)
+                        if (SymbolTable.TOKENS.size() == size)
                             throw new MyException(MyException.DEFAULTERROR,peek().getLine());
                     }
                     break;
@@ -601,21 +603,21 @@ public class RecursiveDescent {
             assert t != null;   // t must not null
             assert t.getContent() != null && !t.getContent().equals("");  // content must not null
             String idName = t.getContent();
-            if (SymbolTable.SYMBOLES.get(idName) == null)
+            if (this.SYMBOLS.get(idName) == null)
                 throw new MyException(MyException.IDENTIFYNOTFOUND,t.getLine());
             if (expect(Tag.LEFT_SQUARE_BRACKET)){   // array
                 // TODO: array element is not implemented temporally
 
-            }else if (SymbolTable.SYMBOLES.get(idName).getType() == Tag.INT){  // identification
-                Num num = (Num) SymbolTable.SYMBOLES.get(idName);
+            }else if (this.SYMBOLS.get(idName).getType() == Tag.INT){  // identification
+                Num num = (Num) this.SYMBOLS.get(idName);
                 int value = num.getValue();
                 if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
                     forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
                 if (type == Tag.PLUSPLUS){
-                    SymbolTable.SYMBOLES.put(idName,new Num(Tag.INT,String.valueOf(value+1),t.getLine(),value+1,num.isInit()));
+                    this.SYMBOLS.put(idName,new Num(Tag.INT,String.valueOf(value+1),t.getLine(),value+1,num.isInit()));
                     genIncDecCode("+",idName);
                 }else{
-                    SymbolTable.SYMBOLES.put(idName,new Num(Tag.INT,String.valueOf(value-1),t.getLine(),value-1,num.isInit()));
+                    this.SYMBOLS.put(idName,new Num(Tag.INT,String.valueOf(value-1),t.getLine(),value-1,num.isInit()));
                     genIncDecCode("-",idName);
                 }
             }else
@@ -760,7 +762,7 @@ public class RecursiveDescent {
             stack.push(token.getContent());
             move();
         }else if (token.getType() == Tag.IDENTIFY){ // id 转数字
-            Token tmp = SymbolTable.SYMBOLES.get(token.getContent());
+            Token tmp = this.SYMBOLS.get(token.getContent());
             if (tmp == null){
                 System.err.println("未找到标识符"+token.getContent());
                 error();
@@ -784,9 +786,9 @@ public class RecursiveDescent {
                     throw new MyException(MyException.ARRAYINDEXERROR,peek().getLine());
                 }
                 int index = (int)result;
-                if (!(SymbolTable.SYMBOLES.get(token.getContent()) instanceof Array))
+                if (!(this.SYMBOLS.get(token.getContent()) instanceof Array))
                     throw new MyException(MyException.ARRAYIDENTIFYNOTFOUNDERROR,peek().getLine());
-                Array array = (Array) SymbolTable.SYMBOLES.get(token.getContent());
+                Array array = (Array) this.SYMBOLS.get(token.getContent());
                 if (index < 0 || index >= array.getSize())
                     throw new MyException(MyException.ARRAYINDEXOUTOFBOUNDS,peek().getLine());
                 result = array.getArray().get(index).intValue();

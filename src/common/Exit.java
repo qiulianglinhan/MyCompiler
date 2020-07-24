@@ -20,4 +20,6 @@ public class Exit {
     public static final int CASEERROR = -18;
     public static final int DEFAULTERROR = -19;
     public static final int ELSEERROR = -20;
+    public static final int FUNCTIONDECERROR = -21;
+    public static final int TYPEERROR = -22;
 }

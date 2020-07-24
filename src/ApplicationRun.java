@@ -7,11 +7,11 @@ import java.io.IOException;
 
 public class ApplicationRun {
     public static void main(String[] args) throws IOException {
-        String fileName = "test\\SwitchTest\\SwitchTest.c";
+        String fileName = "test\\FunctionTest\\MaxFunctionTest.c";
         new LexicalAnalysis(fileName);
         new RecursiveDescent(true);
-        new RunFourFormula(true,fileName);
-        System.out.println(Result.RESULT);
-        System.out.println(Result.ARRAYRESULT);
+//        new RunFourFormula(true,fileName);
+//        System.out.println(Result.RESULT);
+//        System.out.println(Result.ARRAYRESULT);
     }
 }

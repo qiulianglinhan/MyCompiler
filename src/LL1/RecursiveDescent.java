@@ -15,6 +15,7 @@ public class RecursiveDescent {
     private Stack<Break> breakStack;                // 存放一个block中break的位置
     private Stack<Continue> continueStack;          // 存放一个block中continue的位置
     private Map<String,Token> SYMBOLS;              // 存放当前程序所有的符号对应的value
+    private Map<String,Function> allFunctions;      // 存放当前程序所有函数对应的行号
 
     /**
      * 构造函数
@@ -42,6 +43,14 @@ public class RecursiveDescent {
         breakStack = new Stack<>();
         continueStack = new Stack<>();
         SYMBOLS = new HashMap<>();
+        allFunctions = new HashMap<>();
+    }
+
+    /**
+     * 用于清除子函数符号表
+     */
+    private void clearData(){
+        this.SYMBOLS.clear();
     }
 
     /**
@@ -101,8 +110,31 @@ public class RecursiveDescent {
      */
     private void program(){
         // program begin
-        match(Tag.INT);match(Tag.MAIN);match(Tag.LEFT_BRACKET);
-        match(Tag.RIGHT_BRACKET);match(Tag.LEFT_FBRACKET);
+        int type;
+        switch (peek().getType()){
+            case Tag.INT: type = Tag.INT;break;
+            case Tag.DOUBLE: type = Tag.DOUBLE;break;
+            case Tag.VOID: type = Tag.VOID;break;
+            default: throw new MyException(MyException.FUNCTIONDECERROR,peek().getLine());
+        }
+        move();
+        String functionName = Objects.requireNonNull(match(Tag.IDENTIFY)).getContent();
+
+        match(Tag.LEFT_BRACKET);
+        Function function = new Function(FourFormula.getLine());
+        if (expect(Tag.INT) || expect(Tag.DOUBLE)){
+            getParameter(function.getParams());
+        }
+        match(Tag.RIGHT_BRACKET);
+        match(Tag.LEFT_FBRACKET);
+
+        // 存放function参数
+        for (Parameter param : function.getParams()) {
+            if (param.getType() == Tag.INT)
+                this.SYMBOLS.put(param.getId(), new Num(Tag.INT, "0", peek().getLine(), 0, false));
+            else
+                this.SYMBOLS.put(param.getId(), new Real(Tag.DOUBLE, "0.0", peek().getLine(), 0, false));
+        }
 
         // c 语言开始是声明语句
         declaration(-1);
@@ -111,9 +143,67 @@ public class RecursiveDescent {
         body();
 
         // program end
-        match(Tag.RETURN);match(Tag.NUMINT);match(Tag.SEMICOLON);
+        int endLine;
+        if (type != Tag.VOID){  // 匹配return
+            match(Tag.RETURN);
+            String res = getIdNameOrNumber();
+            if (res == null){
+                System.err.println(peek().getLine()+"行返回错误");
+                throw new MyException(MyException.TYPEERROR,peek().getLine());
+            }
+            match(Tag.SEMICOLON);
+            endLine = Function.genReturnCode(res);
+        }else
+            endLine = FourFormula.getLine()-1;
         match(Tag.RIGHT_FBRACKET);
-        System.out.println("语法分析成功");
+        function.setEndLineNum(endLine);
+        allFunctions.put(functionName,function);
+        System.out.println("成功匹配函数"+functionName);
+        this.clearData();
+        if (SymbolTable.TOKENS.size() != 0)
+            program();
+    }
+
+    /**
+     * 用于return语句的id获取
+     * @return id或者数字正常返回，null是匹配错误
+     */
+    private String getIdNameOrNumber(){
+        String id = null;
+        if (expect(Tag.IDENTIFY)){
+            id = Objects.requireNonNull(match(Tag.IDENTIFY)).getContent();
+            if (expect(Tag.LEFT_SQUARE_BRACKET)){   // array
+                match(Tag.LEFT_SQUARE_BRACKET);
+                double value = wrapExpr();
+                match(Tag.RIGHT_SQUARE_BRACKET);
+                id += "["+value+"]";
+            }
+        }else if (expect(Tag.NUMINT)) {
+            id = move().getContent();
+        }else if (expect(Tag.NUMDOUBLE)){
+            id = move().getContent();
+        }
+        return id;
+    }
+
+    /**
+     * 获取函数参数
+     * @param parameters 用于存储当前匹配函数参数类型和参数名称
+     */
+    private void getParameter(ArrayList<Parameter> parameters){
+        int type;
+        switch (move().getType()){
+            case Tag.INT: type = Tag.INT;break;
+            case Tag.DOUBLE: type = Tag.DOUBLE;break;
+            case Tag.VOID: type = Tag.VOID;break;
+            default: throw new MyException(MyException.FUNCTIONDECERROR,peek().getLine());
+        }
+        String id = Objects.requireNonNull(match(Tag.IDENTIFY)).getContent();
+        parameters.add(new Parameter(type,id));
+        if (expect(Tag.COMMA)){
+            move();
+            getParameter(parameters);
+        }
     }
 
     /**
@@ -249,18 +339,23 @@ public class RecursiveDescent {
                 move();
                 if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                     error();
-                double value = wrapExpr();
-                if (t.getType() == Tag.INT){
-                    Num num = (Num)t;
-                    this.SYMBOLS.put(idName,new Num(Tag.INT,String.valueOf((int)value),t.getLine(),(int)value,num.isInit()));
-                }else{
-                    Real real = (Real)t;
-                    this.SYMBOLS.put(idName,new Real(Tag.DOUBLE,String.valueOf(value),t.getLine(),value,real.isInit()));
+                if (peek().getType() == Tag.IDENTIFY && allFunctions.get(peek().getContent()) != null){ // function call
+
+                } else {    // identification
+                    double value = wrapExpr();
+                    if (t.getType() == Tag.INT){
+                        Num num = (Num)t;
+                        this.SYMBOLS.put(idName,new Num(Tag.INT,String.valueOf((int)value),t.getLine(),(int)value,num.isInit()));
+                    }else{
+                        Real real = (Real)t;
+                        this.SYMBOLS.put(idName,new Real(Tag.DOUBLE,String.valueOf(value),t.getLine(),value,real.isInit()));
+                    }
+                    if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
+                        forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
+                    // add assign four formula
+                    genAssignCode(idName);
                 }
-                if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
-                    forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
-                // add assign four formula
-                genAssignCode(idName);
+
             }else if (expect(Tag.LEFT_SQUARE_BRACKET)){
                 move();
                 int index = getArrayIndex();
@@ -315,6 +410,21 @@ public class RecursiveDescent {
                 match(Tag.SEMICOLON);   // 暂时设置为赋值语句一定以;结尾
         }
 
+    }
+
+    private void functionCall(String result){
+        String functionName = move().getContent();
+        String tmpName; // 函数变量
+        match(Tag.LEFT_BRACKET);
+        while(true){
+            if (expect(Tag.RIGHT_BRACKET))
+                break;
+            wrapExpr();
+            tmpName = stack.pop().toString();
+
+
+        }
+        match(Tag.RIGHT_BRACKET);
     }
 
     /**

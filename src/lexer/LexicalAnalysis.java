@@ -372,7 +372,6 @@ public class LexicalAnalysis {
         // put stack
         Collections.reverse(tokens);
         SymbolTable.TOKENS.addAll(tokens);
-//        System.out.println(SymbolTable.TOKENS.peek());
 
     }
 

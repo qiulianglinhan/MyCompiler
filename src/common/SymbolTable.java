@@ -16,7 +16,10 @@ public class SymbolTable {
 
     static {
         // keywords begin
-        KEYWORDS.add("int");KEYWORDS.add("double");KEYWORDS.add("main");KEYWORDS.add("if");
+        KEYWORDS.add("int");KEYWORDS.add("double");
+        // remove main as keyword  -- 2020-7-24
+        //KEYWORDS.add("main");
+        KEYWORDS.add("if");
         KEYWORDS.add("else");KEYWORDS.add("for");KEYWORDS.add("while");KEYWORDS.add("return");
         KEYWORDS.add("void");KEYWORDS.add("break");KEYWORDS.add("continue");KEYWORDS.add("do");
         // keywords end
@@ -25,7 +28,9 @@ public class SymbolTable {
         // keywords begin
         SYMBOL2TAG.put("if",Tag.IF);SYMBOL2TAG.put("else",Tag.ELSE);SYMBOL2TAG.put("break",Tag.BREAK);
         SYMBOL2TAG.put("continue",Tag.CONTINUE);SYMBOL2TAG.put("do",Tag.DO);SYMBOL2TAG.put("while",Tag.WHILE);
-        SYMBOL2TAG.put("for",Tag.FOR);SYMBOL2TAG.put("void",Tag.VOID);SYMBOL2TAG.put("main",Tag.MAIN);
+        SYMBOL2TAG.put("for",Tag.FOR);SYMBOL2TAG.put("void",Tag.VOID);
+        // remove main as keyword --2020-7-24
+        //SYMBOL2TAG.put("main",Tag.MAIN);
         SYMBOL2TAG.put("int",Tag.INT);SYMBOL2TAG.put("double",Tag.DOUBLE);SYMBOL2TAG.put("return",Tag.RETURN);
         SYMBOL2TAG.put("switch",Tag.SWITCH);SYMBOL2TAG.put("case",Tag.CASE);SYMBOL2TAG.put("default",Tag.DEFAULT);
         // keywords end

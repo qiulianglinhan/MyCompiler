@@ -29,6 +29,8 @@ public class MyException extends RuntimeException {
     public static final int CASEERROR = 21; // case
     public static final int DEFAULTERROR = 22;  // default
     public static final int ELSEERROR = 23;     // else
+    public static final int FUNCTIONDECERROR = 24;  // 函数声明错误
+    public static final int TYPEERROR = 25;     // type error
 
     /**
      * 自定义异常
@@ -82,6 +84,10 @@ public class MyException extends RuntimeException {
             printDefaultError(line);
         }else if (errorCode == ELSEERROR){
             printElseError(line);
+        }else if (errorCode == FUNCTIONDECERROR){
+            printFunctionDecError(line);
+        }else if (errorCode == TYPEERROR){
+            printTypeError(line);
         }
         else {
             unkonwError();
@@ -201,6 +207,16 @@ public class MyException extends RuntimeException {
     private void printElseError(int line){
         System.err.println(line+"行else语句错误");
         System.exit(Exit.ELSEERROR);
+    }
+
+    private void printFunctionDecError(int line){
+        System.err.println(line+"行函数声明错误");
+        System.exit(Exit.FUNCTIONDECERROR);
+    }
+
+    private void printTypeError(int line){
+        System.err.println(line+"行出现类型错误");
+        System.exit(Exit.TYPEERROR);
     }
 
     private void unkonwError(){

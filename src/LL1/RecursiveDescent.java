@@ -15,7 +15,6 @@ public class RecursiveDescent {
     private Stack<Break> breakStack;                // 存放一个block中break的位置
     private Stack<Continue> continueStack;          // 存放一个block中continue的位置
     private Map<String,Token> SYMBOLS;              // 存放当前程序所有的符号对应的value
-    private Map<String,Function> allFunctions;      // 存放当前程序所有函数对应的行号
 
     /**
      * 构造函数
@@ -43,7 +42,6 @@ public class RecursiveDescent {
         breakStack = new Stack<>();
         continueStack = new Stack<>();
         SYMBOLS = new HashMap<>();
-        allFunctions = new HashMap<>();
     }
 
     /**
@@ -157,7 +155,7 @@ public class RecursiveDescent {
             endLine = FourFormula.getLine()-1;
         match(Tag.RIGHT_FBRACKET);
         function.setEndLineNum(endLine);
-        allFunctions.put(functionName,function);
+        Function.allFunctions.put(functionName,function);
         System.out.println("成功匹配函数"+functionName);
         this.clearData();
         if (SymbolTable.TOKENS.size() != 0)
@@ -253,14 +251,18 @@ public class RecursiveDescent {
                     if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                         error();
                     // 改为 expr -- 2020-7-12 10：58
-                    Token t = peek();
-                    value = (int)wrapExpr();
-                    this.SYMBOLS.put(idName, new Num(Tag.INT, String.valueOf(value), t.getLine(), value, true));
-                    genAssignCode(idName);
+                    if (peek().getType() == Tag.IDENTIFY && Function.allFunctions.get(peek().getContent()) != null){ // function call
+                        this.SYMBOLS.put(idName,new Num(Tag.INT,peek().getContent(),peek().getLine(),0,false));
+                        functionCall(idName);
+                    }else {
+                        Token t = peek();
+                        value = (int) wrapExpr();
+                        this.SYMBOLS.put(idName, new Num(Tag.INT, String.valueOf(value), t.getLine(), value, true));
+                        genAssignCode(idName);
+                    }
                 }else if (peek().getType() == Tag.LEFT_SQUARE_BRACKET){ // array declaration
                     move();
                     Token t = peek();
-//                    value = Integer.parseInt(Objects.requireNonNull(match(Tag.NUMINT)).getContent());
                     value = (int)wrapExpr();
                     match(Tag.RIGHT_SQUARE_BRACKET);
                     if (!(expect(Tag.SEMICOLON) || expect(Tag.COMMA))) // end error
@@ -291,10 +293,15 @@ public class RecursiveDescent {
                     if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                         error();
                     // 改为 expr -- 2020-7-12 10：58
-                    Token t = peek();
-                    value = wrapExpr();
-                    this.SYMBOLS.put(idName, new Real(Tag.DOUBLE, String.valueOf(value), t.getLine(), value, true));
-                    genAssignCode(idName);
+                    if (peek().getType() == Tag.IDENTIFY && Function.allFunctions.get(peek().getContent()) != null){ // function call
+                        this.SYMBOLS.put(idName,new Real(Tag.DOUBLE,peek().getContent(),peek().getLine(),0.0,false));
+                        functionCall(idName);
+                    }else {
+                        Token t = peek();
+                        value = wrapExpr();
+                        this.SYMBOLS.put(idName, new Real(Tag.DOUBLE, String.valueOf(value), t.getLine(), value, true));
+                        genAssignCode(idName);
+                    }
                 }else if (peek().getType() == Tag.LEFT_SQUARE_BRACKET){ // array declaration
                     move();
                     Token t = peek();
@@ -339,8 +346,8 @@ public class RecursiveDescent {
                 move();
                 if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                     error();
-                if (peek().getType() == Tag.IDENTIFY && allFunctions.get(peek().getContent()) != null){ // function call
-
+                if (peek().getType() == Tag.IDENTIFY && Function.allFunctions.get(peek().getContent()) != null){ // function call
+                    functionCall(idName);
                 } else {    // identification
                     double value = wrapExpr();
                     if (t.getType() == Tag.INT){
@@ -372,15 +379,19 @@ public class RecursiveDescent {
                     move();
                     if (expect(Tag.SEMICOLON) || expect(Tag.COMMA)) // end error
                         error();
-                    double value = wrapExpr();
-                    if (array.getType() == Tag.ARRAYINT){
-                        array.getArray().set(index,(int)value);
-                    }else{
-                        array.getArray().set(index,value);
+                    if (peek().getType() == Tag.IDENTIFY && Function.allFunctions.get(peek().getContent()) != null){ // function call
+                        functionCall(idName);
+                    }else {
+                        double value = wrapExpr();
+                        if (array.getType() == Tag.ARRAYINT) {
+                            array.getArray().set(index, (int) value);
+                        } else {
+                            array.getArray().set(index, value);
+                        }
+                        if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
+                            forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
+                        genAssignCode(idName + "[" + arrayPointRecord.get(idName) + "]");
                     }
-                    if (forRecordStack.size() > 0 && forRecordStack.peek().getForStatAssign())
-                        forRecordStack.peek().getForStatRecord().add(FourFormula.getLine());
-                    genAssignCode(idName+"["+arrayPointRecord.get(idName)+"]");
                 }
             }else if (expect(Tag.PLUSPLUS) || expect(Tag.MINUSMINUS)){
                 int type = move().getType();
@@ -412,18 +423,26 @@ public class RecursiveDescent {
 
     }
 
+    /**
+     * 调用函数
+     * @param result 存放结果的变量，若为null则不需要存储结果
+     */
     private void functionCall(String result){
         String functionName = move().getContent();
         String tmpName; // 函数变量
+        int cnt = 0;
+        Function function = Function.allFunctions.get(functionName);
         match(Tag.LEFT_BRACKET);
         while(true){
             if (expect(Tag.RIGHT_BRACKET))
                 break;
             wrapExpr();
             tmpName = stack.pop().toString();
-
-
+            Function.genParamCode(tmpName,function.getParams().get(cnt++).getId());
+            if (expect(Tag.COMMA))
+                move();
         }
+        Function.genCallFunctionCode(functionName,result);
         match(Tag.RIGHT_BRACKET);
     }
 

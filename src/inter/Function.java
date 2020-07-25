@@ -1,6 +1,8 @@
 package inter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 用于函数
@@ -9,6 +11,11 @@ public class Function {
     private ArrayList<Parameter> params;
     private final int startLineNum;
     private int endLineNum;
+    public static Map<String,Function> allFunctions;      // 存放当前程序所有函数对应的行号
+
+    static {
+        allFunctions = new HashMap<>();
+    }
 
     public Function(int startLineNum, int[] types, String[] ids){
         this.startLineNum = startLineNum;
@@ -51,7 +58,7 @@ public class Function {
     }
 
     /**
-     * 生成call function 四元式
+     * 生成call function 四元式:[call,functionName,_,res]
      * @param functionName 方法名称
      * @param result 存放方法返回的结果
      */
@@ -62,8 +69,12 @@ public class Function {
         FourFormula.gen("call",functionName,null,result);
     }
 
-
+    /**
+     * 生成传参四元式:[param,value,_,res]
+     * @param arg value值
+     * @param result 参数存放
+     */
     public static void genParamCode(String arg,String result){
-
+        FourFormula.gen("param",arg,null,result);
     }
 }

@@ -3,8 +3,7 @@ package run;
 import common.MyException;
 import common.SymbolTable;
 import common.Tag;
-import inter.FourFormula;
-import inter.InterArray;
+import inter.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -16,8 +15,10 @@ import java.util.Map;
 public class RunFourFormula {
 
     private int curPoint = 0;
-    private Map<String,Double> map = new HashMap<>();
-    private Map<String, InterArray>  arrayMap = new HashMap<>();
+    private Map<String,Double> idMap = new HashMap<>();             // id -> value
+    private Map<String, InterArray>  arrayMap = new HashMap<>();    // id -> array
+    private Map<String,Double> tmpIdMap = new HashMap<>();          // 参数临时map
+    private double returnValue;                                     // return value
 
     /**
      * 运行四元式，当前四元式执行是从内存直接运行，生成四元式文件仅仅为用户查看
@@ -26,7 +27,6 @@ public class RunFourFormula {
      * @throws IOException 生成四元式文件错误
      */
     public RunFourFormula(boolean generateFourFormulaFile,String fileName) throws IOException {
-        new Result();
         if (generateFourFormulaFile){
             String outMidFileName = fileName.substring(0,fileName.indexOf('.'))+".ff";
             File fout = new File(outMidFileName);
@@ -37,6 +37,7 @@ public class RunFourFormula {
             fw.close();
             System.out.println("生成四元式文件成功，生成文件名称为："+outMidFileName);
         }
+        curPoint = Function.allFunctions.get("main").getStartLineNum();
         while (curPoint < SymbolTable.fourFormulas.size()){
             parseFourFormula();
         }
@@ -52,11 +53,10 @@ public class RunFourFormula {
         if (op.equals("=")){   // assign
             double value = getArgValue(arg1);
             if (!res.contains("[")){
-                map.put(res,value);
+                idMap.put(res,value);
                 if (res.charAt(0) != '$')   // 非临时变量放入结果集
                     Result.RESULT.put(res,value);
-            }
-            else{   // 数组元素赋值
+            } else {   // 数组元素赋值
                 int leftSquareBracketIndex = res.indexOf('[');
                 int rightSquareBracketIndex = res.indexOf(']');
                 String index = res.substring(leftSquareBracketIndex+1,rightSquareBracketIndex);
@@ -65,11 +65,10 @@ public class RunFourFormula {
                 if (Character.isDigit(index.charAt(0)))
                     arrayIndex = Integer.parseInt(index);
                 else
-                    arrayIndex = map.get(index).intValue();
+                    arrayIndex = idMap.get(index).intValue();
                 arrayMap.get(idName).getArray().set(arrayIndex,value);
                 Result.ARRAYRESULT.get(idName).set(arrayIndex,value);
             }
-
         }else if (SymbolTable.COMPAREWORDS.contains(SymbolTable.SYMBOL2TAG.get(op))){
             if (compare(op,getArgValue(arg1),getArgValue(arg2)))   // 满足条件，走result的goto
                 curPoint++; // if返回true时候，当前指针实际是 if的下面第二行
@@ -77,7 +76,7 @@ public class RunFourFormula {
             curPoint = Integer.parseInt(res);
         }else if (SymbolTable.operator.contains(op)){
             double value = getOperatorValue(op,getArgValue(arg1),getArgValue(arg2));
-            map.put(res,value);
+            idMap.put(res,value);
             if (res.charAt(0) != '$')
                 Result.RESULT.put(res,value);
         }else if (op.equals("array")){
@@ -86,6 +85,70 @@ public class RunFourFormula {
             int size = (int)getArgValue(arg1);
             initAnArray(size,arrayList);
             Result.ARRAYRESULT.put(res,arrayList);
+        }else if (op.equals("param")){
+            String arg = fourFormula.getArg1();
+            double value = getArgValue(arg);
+            tmpIdMap.put(fourFormula.getResult(),value);
+        }else if (op.equals("call")){
+            Env.envStack.push(new AllIdMapAndArrayMap(idMap,arrayMap,curPoint));
+            idMap.clear();
+            tmpIdMap.forEach((k,v) -> idMap.put(k,v));
+            curPoint = Function.allFunctions.get(fourFormula.getArg1()).getStartLineNum();
+
+            Result.RESULT.forEach((k,v) -> Env.envStack.peek().getResultIdMap().put(k,v));
+            Result.ARRAYRESULT.forEach((k,v) -> Env.envStack.peek().getResultArrayMap().put(k,new InterArray(v.size(),v)));
+
+            tmpIdMap.clear();
+            arrayMap.clear();
+            Result.RESULT.clear();
+            Result.ARRAYRESULT.clear();
+
+            for (String key : idMap.keySet()) {
+                if (key.charAt(0) != '$')
+                    Result.RESULT.put(key,idMap.get(key));
+            }
+
+            tmpIdMap.clear();
+
+        }else if (op.equals("return")){
+            if (Env.envStack.size() > 0) {
+                returnValue = getArgValue(fourFormula.getResult());
+                idMap.clear();
+                arrayMap.clear();
+                Result.RESULT.clear();
+                Result.ARRAYRESULT.clear();
+                idMap = Env.envStack.peek().getIdMap();
+                arrayMap = Env.envStack.peek().getArrayMap();
+                Result.RESULT = Env.envStack.peek().getResultIdMap();
+                Map<String, InterArray> resultArrayMap = Env.envStack.peek().getResultArrayMap();
+                for (String key : resultArrayMap.keySet()) {
+                    Result.ARRAYRESULT.put(key, resultArrayMap.get(key).getArray());
+                }
+                int returnPosition = Env.envStack.peek().getReturnPosition();
+                String result = SymbolTable.fourFormulas.get(returnPosition - 1).getResult();
+                if (!result.equals("_")) {
+                    if (result.contains("[")) { // 数组元素赋值
+                        int leftSquareBracketIndex = res.indexOf('[');
+                        int rightSquareBracketIndex = res.indexOf(']');
+                        String index = res.substring(leftSquareBracketIndex + 1, rightSquareBracketIndex);
+                        String idName = res.substring(0, leftSquareBracketIndex);
+                        int arrayIndex;
+                        if (Character.isDigit(index.charAt(0)))
+                            arrayIndex = Integer.parseInt(index);
+                        else
+                            arrayIndex = idMap.get(index).intValue();
+                        arrayMap.get(idName).getArray().set(arrayIndex, returnValue);
+                        Result.ARRAYRESULT.get(idName).set(arrayIndex, returnValue);
+                    } else {
+                        idMap.put(result, returnValue);
+                        if (result.charAt(0) != '$')
+                            Result.RESULT.put(result, returnValue);
+                    }
+                }
+                curPoint = Env.envStack.peek().getReturnPosition();
+                Env.envStack.pop();
+            } else
+                curPoint = SymbolTable.fourFormulas.size();
         }
         else
             throw new MyException(MyException.FOURFORMULAERROR,curPoint);
@@ -109,10 +172,10 @@ public class RunFourFormula {
             if (Character.isDigit(index.charAt(0)))
                 arrayIndex = Integer.parseInt(index);
             else
-                arrayIndex = map.get(index).intValue();
+                arrayIndex = idMap.get(index).intValue();
             value = arrayMap.get(idName).getArray().get(arrayIndex).doubleValue();
         }else
-            value = map.get(arg);
+            value = idMap.get(arg);
         return value;
     }
 

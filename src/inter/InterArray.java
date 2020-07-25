@@ -17,6 +17,11 @@ public class InterArray {
         }
     }
 
+    public InterArray(int size, ArrayList<Number> array){
+        this.size = size;
+        this.array = array;
+    }
+
     public int getSize() {
         return size;
     }

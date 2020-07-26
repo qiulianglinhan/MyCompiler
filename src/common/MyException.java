@@ -6,6 +6,7 @@ package common;
 
 public class MyException extends RuntimeException {
 
+    public static final int NEEDNOTLINENUMBER = -1;
     public static final int NUMERROR = 1;
     public static final int COMMENTERROR = 2;
     public static final int DIVERROR = 3;
@@ -31,6 +32,9 @@ public class MyException extends RuntimeException {
     public static final int ELSEERROR = 23;     // else
     public static final int FUNCTIONDECERROR = 24;  // 函数声明错误
     public static final int TYPEERROR = 25;     // type error
+    public static final int PARAMETERERROR = 26;    // 函数参数错误
+    public static final int MAINFUNCTIONNOTFOUNDERROR = 27;     // 主函数未找到错误
+    public static final int FUNCTIONNOTFOUNDERROR = 28; // 函数未找到错误
 
     /**
      * 自定义异常
@@ -88,6 +92,12 @@ public class MyException extends RuntimeException {
             printFunctionDecError(line);
         }else if (errorCode == TYPEERROR){
             printTypeError(line);
+        }else if (errorCode == PARAMETERERROR){
+            printParameterError(line);
+        }else if (errorCode == MAINFUNCTIONNOTFOUNDERROR){
+            printMainFunctionNotFoundError(line);
+        }else if (errorCode == FUNCTIONNOTFOUNDERROR){
+            printFunctionNotFoundError(line);
         }
         else {
             unkonwError();
@@ -217,6 +227,21 @@ public class MyException extends RuntimeException {
     private void printTypeError(int line){
         System.err.println(line+"行出现类型错误");
         System.exit(Exit.TYPEERROR);
+    }
+
+    private void printParameterError(int line){
+        System.err.println("函数参数传入错误");
+        System.exit(Exit.PARAMETERERROR);
+    }
+
+    private void printMainFunctionNotFoundError(int line){
+        System.err.println("主函数未找到错误");
+        System.exit(Exit.MAINFUNCTIONNOTFOUNDERROR);
+    }
+
+    private void printFunctionNotFoundError(int line){
+        System.err.println("函数未找到错误");
+        System.exit(Exit.FUNCTIONNOTFOUNDERROR);
     }
 
     private void unkonwError(){

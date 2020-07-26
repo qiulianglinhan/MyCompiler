@@ -15,6 +15,8 @@ public class RecursiveDescent {
     private Stack<Break> breakStack;                // 存放一个block中break的位置
     private Stack<Continue> continueStack;          // 存放一个block中continue的位置
     private Map<String,Token> SYMBOLS;              // 存放当前程序所有的符号对应的value
+    private static int parameterCount = 0;          // 用于统计函数参数
+    private int currentFunctionType;                // 用于扫描当前函数，用于处理void函数
 
     /**
      * 构造函数
@@ -116,13 +118,16 @@ public class RecursiveDescent {
             default: throw new MyException(MyException.FUNCTIONDECERROR,peek().getLine());
         }
         move();
+        currentFunctionType = type;
         String functionName = Objects.requireNonNull(match(Tag.IDENTIFY)).getContent();
 
         match(Tag.LEFT_BRACKET);
-        Function function = new Function(FourFormula.getLine());
+        Function function = new Function(FourFormula.getLine(), 0,functionName);
+        parameterCount = 0;
         if (expect(Tag.INT) || expect(Tag.DOUBLE)){
             getParameter(function.getParams());
         }
+        function.setTotalParameter(parameterCount);
         match(Tag.RIGHT_BRACKET);
         match(Tag.LEFT_FBRACKET);
 
@@ -198,6 +203,7 @@ public class RecursiveDescent {
         }
         String id = Objects.requireNonNull(match(Tag.IDENTIFY)).getContent();
         parameters.add(new Parameter(type,id));
+        parameterCount++;
         if (expect(Tag.COMMA)){
             move();
             getParameter(parameters);
@@ -208,6 +214,7 @@ public class RecursiveDescent {
      * 程序体
      */
     private void body(){
+        int size = SymbolTable.TOKENS.size();
         if (expect(Tag.CASE)){          // 悬空case
             System.err.println(peek().getLine()+"行出现悬空case");
             throw new MyException(MyException.CASEERROR,peek().getLine());
@@ -226,10 +233,14 @@ public class RecursiveDescent {
         }else if (expect(Tag.CONTINUE)){
             System.err.println(peek().getLine()+"行出现悬空continue");
             throw new MyException(MyException.CONTINUEERROR,peek().getLine());
+        }else if (expect(Tag.RIGHT_FBRACKET) && currentFunctionType == Tag.VOID) {
+            return;
         }
         else
             block();
-        // @descrption: 简单起见，主函数只有一个 return 语句
+        if (SymbolTable.TOKENS.size() == size)
+            error();
+        // TODO: 简单起见，主函数只有一个 return 语句
         if (!expect(Tag.RETURN))
             body();
     }
@@ -495,8 +506,15 @@ public class RecursiveDescent {
      * statement 语句，以 ";" 结束
      */
     private void stat(){
-        if (expect(Tag.IDENTIFY) || expect(Tag.PLUSPLUS) || expect(Tag.MINUSMINUS))
-            assign();
+        if (expect(Tag.IDENTIFY) || expect(Tag.PLUSPLUS) || expect(Tag.MINUSMINUS)) {
+            if (expect(Tag.IDENTIFY) && Function.allFunctions.get(peek().getContent()) != null){
+                // function call and no accept object
+                functionCall(null);
+                if (expect(Tag.SEMICOLON))
+                    move();
+            }else
+                assign();
+        }
         else if (expect(Tag.IF))
             ifStat();
         else if (expect(Tag.WHILE))

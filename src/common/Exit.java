@@ -22,4 +22,7 @@ public class Exit {
     public static final int ELSEERROR = -20;
     public static final int FUNCTIONDECERROR = -21;
     public static final int TYPEERROR = -22;
+    public static final int PARAMETERERROR = -23;
+    public static final int MAINFUNCTIONNOTFOUNDERROR = -24;
+    public static final int FUNCTIONNOTFOUNDERROR = -25;
 }

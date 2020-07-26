@@ -11,14 +11,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 public class RunFourFormula {
 
-    private int curPoint = 0;
+    private int curPoint;                                           // 当前四元式执行位置
     private Map<String,Double> idMap = new HashMap<>();             // id -> value
     private Map<String, InterArray>  arrayMap = new HashMap<>();    // id -> array
     private Map<String,Double> tmpIdMap = new HashMap<>();          // 参数临时map
     private double returnValue;                                     // return value
+    private int parameterCount;                                     // 统计执行当前call function时已传入参数个数
+    private Stack<String> functionNameStack;                        // 存放运行函数名称
+    private String currentRunFunctionName;                          // 当前运行函数名称
 
     /**
      * 运行四元式，当前四元式执行是从内存直接运行，生成四元式文件仅仅为用户查看
@@ -37,13 +41,37 @@ public class RunFourFormula {
             fw.close();
             System.out.println("生成四元式文件成功，生成文件名称为："+outMidFileName);
         }
+        if (Function.allFunctions.get("main") == null)
+            throw new MyException(MyException.MAINFUNCTIONNOTFOUNDERROR,MyException.NEEDNOTLINENUMBER);
         curPoint = Function.allFunctions.get("main").getStartLineNum();
+        currentRunFunctionName = "main";
+        functionNameStack = new Stack<>();
+        parameterCount = 0;
         while (curPoint < SymbolTable.fourFormulas.size()){
             parseFourFormula();
         }
     }
 
     private void parseFourFormula(){
+
+        // handler void function
+        if (!currentRunFunctionName.equals("main") && curPoint > Function.allFunctions.get(currentRunFunctionName).getEndLineNum()){
+            idMap.clear();
+            arrayMap.clear();
+            Result.RESULT.clear();
+            Result.ARRAYRESULT.clear();
+            idMap = Env.envStack.peek().getIdMap();
+            arrayMap = Env.envStack.peek().getArrayMap();
+            Result.RESULT = Env.envStack.peek().getResultIdMap();
+            Map<String, InterArray> resultArrayMap = Env.envStack.peek().getResultArrayMap();
+            for (String key : resultArrayMap.keySet()) {
+                Result.ARRAYRESULT.put(key, resultArrayMap.get(key).getArray());
+            }
+            curPoint = Env.envStack.peek().getReturnPosition();
+            Env.envStack.pop();
+            currentRunFunctionName = functionNameStack.pop();
+        }
+
         FourFormula fourFormula = SymbolTable.fourFormulas.get(curPoint++);
 
         String op = fourFormula.getOp();
@@ -89,11 +117,25 @@ public class RunFourFormula {
             String arg = fourFormula.getArg1();
             double value = getArgValue(arg);
             tmpIdMap.put(fourFormula.getResult(),value);
+            parameterCount++;
         }else if (op.equals("call")){
+            String functionName = fourFormula.getArg1();
+            if (Function.allFunctions.get(functionName) == null)
+                throw new MyException(MyException.FUNCTIONNOTFOUNDERROR,MyException.NEEDNOTLINENUMBER);
+            int needParameterNumber = Integer.parseInt(fourFormula.getArg2());
+            if (needParameterNumber != parameterCount){
+                if (needParameterNumber < parameterCount)
+                    System.err.println("参数传入数目多于需要数目");
+                else
+                    System.err.println("参数传入数目小于需要数目");
+                throw new MyException(MyException.PARAMETERERROR,MyException.NEEDNOTLINENUMBER);
+            }
+            parameterCount = 0;     // reset parameter count
+
             Env.envStack.push(new AllIdMapAndArrayMap(idMap,arrayMap,curPoint));
             idMap.clear();
             tmpIdMap.forEach((k,v) -> idMap.put(k,v));
-            curPoint = Function.allFunctions.get(fourFormula.getArg1()).getStartLineNum();
+            curPoint = Function.allFunctions.get(functionName).getStartLineNum();
 
             Result.RESULT.forEach((k,v) -> Env.envStack.peek().getResultIdMap().put(k,v));
             Result.ARRAYRESULT.forEach((k,v) -> Env.envStack.peek().getResultArrayMap().put(k,new InterArray(v.size(),v)));
@@ -110,6 +152,8 @@ public class RunFourFormula {
 
             tmpIdMap.clear();
 
+            functionNameStack.push(currentRunFunctionName);
+            currentRunFunctionName = functionName;
         }else if (op.equals("return")){
             if (Env.envStack.size() > 0) {
                 returnValue = getArgValue(fourFormula.getResult());
@@ -147,6 +191,7 @@ public class RunFourFormula {
                 }
                 curPoint = Env.envStack.peek().getReturnPosition();
                 Env.envStack.pop();
+                currentRunFunctionName = functionNameStack.pop();
             } else
                 curPoint = SymbolTable.fourFormulas.size();
         }

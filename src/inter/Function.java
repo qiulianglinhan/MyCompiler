@@ -12,23 +12,43 @@ public class Function {
     private final int startLineNum;
     private int endLineNum;
     public static Map<String,Function> allFunctions;      // 存放当前程序所有函数对应的行号
+    private int totalParameter;                           // 该函数形参总数
+    private final String functionName;                          // 函数名称
 
     static {
         allFunctions = new HashMap<>();
     }
 
-    public Function(int startLineNum, int[] types, String[] ids){
+    public Function(int startLineNum, int[] types, String[] ids, int totalParameter,String functionName){
         this.startLineNum = startLineNum;
+        this.totalParameter = totalParameter;
         params = new ArrayList<>();
         assert types.length == ids.length;  // must equals
         for (int i = 0; i < types.length; i++) {
             params.add(new Parameter(types[i],ids[i]));
         }
+        assert functionName != null;
+        this.functionName = functionName;
     }
 
-    public Function(int startLineNum){
+    public int getTotalParameter() {
+        return totalParameter;
+    }
+
+    public void setTotalParameter(int totalParameter) {
+        this.totalParameter = totalParameter;
+    }
+
+    public Function(int startLineNum, int totalParameter,String functionName){
         this.startLineNum = startLineNum;
+        this.totalParameter = totalParameter;
         params = new ArrayList<>();
+        assert functionName != null;
+        this.functionName = functionName;
+    }
+
+    public String getFunctionName() {
+        return functionName;
     }
 
     public ArrayList<Parameter> getParams() {
@@ -58,7 +78,8 @@ public class Function {
     }
 
     /**
-     * 生成call function 四元式:[call,functionName,_,res]
+     * 生成call function 四元式:[call,functionName,parameterNumber,res]
+     * parameterNumber 是函数需要的参数个数
      * @param functionName 方法名称
      * @param result 存放方法返回的结果
      */
@@ -66,7 +87,7 @@ public class Function {
         assert functionName != null;
         if (result == null)
             result = "_";
-        FourFormula.gen("call",functionName,null,result);
+        FourFormula.gen("call",functionName,String.valueOf(Function.allFunctions.get(functionName).getTotalParameter()),result);
     }
 
     /**

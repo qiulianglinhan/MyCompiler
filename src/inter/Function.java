@@ -8,17 +8,25 @@ import java.util.Map;
  * 用于函数
  */
 public class Function {
-    private ArrayList<Parameter> params;
-    private final int startLineNum;
-    private int endLineNum;
+    private ArrayList<Parameter> params;                  // 存放函数需要的参数
+    private final int startLineNum;                       // 函数在四元式的开始位置
+    private int endLineNum;                               // 函数在四元式的结束位置
     public static Map<String,Function> allFunctions;      // 存放当前程序所有函数对应的行号
     private int totalParameter;                           // 该函数形参总数
-    private final String functionName;                          // 函数名称
+    private final String functionName;                    // 函数名称
 
     static {
         allFunctions = new HashMap<>();
     }
 
+    /**
+     * 函数构造器
+     * @param startLineNum 函数四元式起始行号
+     * @param types 存放参数类型
+     * @param ids 存放参数变量名称
+     * @param totalParameter 总共参数个数
+     * @param functionName 函数名称
+     */
     public Function(int startLineNum, int[] types, String[] ids, int totalParameter,String functionName){
         this.startLineNum = startLineNum;
         this.totalParameter = totalParameter;
@@ -31,20 +39,26 @@ public class Function {
         this.functionName = functionName;
     }
 
-    public int getTotalParameter() {
-        return totalParameter;
-    }
-
-    public void setTotalParameter(int totalParameter) {
-        this.totalParameter = totalParameter;
-    }
-
+    /**
+     * 函数构造器
+     * @param startLineNum 函数四元式起始行号
+     * @param totalParameter 总共参数个数
+     * @param functionName 函数名称
+     */
     public Function(int startLineNum, int totalParameter,String functionName){
         this.startLineNum = startLineNum;
         this.totalParameter = totalParameter;
         params = new ArrayList<>();
         assert functionName != null;
         this.functionName = functionName;
+    }
+
+    public int getTotalParameter() {
+        return totalParameter;
+    }
+
+    public void setTotalParameter(int totalParameter) {
+        this.totalParameter = totalParameter;
     }
 
     public String getFunctionName() {

@@ -741,7 +741,10 @@ public class RecursiveDescent {
 
     /**
      * bool 条件句，用于判断
-     * @return 返回结果列表，list[0]表示比较式左边表达式结果，list[1]表示比较符号，list[2]表示比较式右边表达式结果
+     * @param ifGenLineList 用于存放if语句生成四元式第二行的行号
+     *                      eg:  行 号       四元式
+     *                            12  :  [<,a,b,goto 14]
+     *                            13  :  [goto,_,_,23]     <- 存储13行号，而不是12行号
      */
     private void bool(ArrayList<Integer> ifGenLineList){
         ArrayList<String> list = new ArrayList<>();

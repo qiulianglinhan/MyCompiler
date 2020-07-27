@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class ApplicationRun {
     public static void main(String[] args) throws IOException {
-        String fileName = "test\\FunctionTest\\MaxFunctionTest.c";
+        String fileName = "test\\IfElseTest\\IfElseTest.c";
         new LexicalAnalysis(fileName);
         new RecursiveDescent(true);
         new RunFourFormula(true,fileName);

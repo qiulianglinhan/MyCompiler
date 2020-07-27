@@ -7,8 +7,8 @@ package common;
 public class Tag {
     public static final int
     IF = 201, ELSE = 202, BREAK = 203, CONTINUE = 204, DO = 205, WHILE = 206, FOR = 207, TRUE = 208,
-            FALSE = 209, VOID = 210, MAIN = 211, INT = 212, DOUBLE = 213,RETURN=214,SWITCH = 215,
-            CASE = 216,DEFAULT = 217;
+    FALSE = 209, VOID = 210, MAIN = 211, INT = 212, DOUBLE = 213,RETURN=214,SWITCH = 215,
+    CASE = 216,DEFAULT = 217;
 
     public static final int
     PLUS = 301, MINUS = 302, MULTI = 303, DIV = 304, MOD = 305, ASSIGN = 306,
@@ -35,7 +35,7 @@ if else break continue do while for true false void main int double return
 switch case default
 
 运算符号：
-+ - * / % = > < >= <= == != ++ -- && ||
++ - * / % = > < >= <= == != ++ -- && || & | ! &= |= << >> += -= *= /=
 
 数字符号：
 int double int_array double_array

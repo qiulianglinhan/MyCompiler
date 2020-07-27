@@ -23,13 +23,13 @@ int main(){
             ++j;
         t++;
     }
-     t = 2;
-     j = 2;
-     while( t > 0){
-        --t;
-        if( t == 5)
-            continue;
-        j--;
-     }
+    t = 2;
+    j = 2;
+    while( t > 0){
+       --t;
+       if( t == 5)
+           continue;
+       j--;
+    }
     return 0;
 }

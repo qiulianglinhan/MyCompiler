@@ -227,18 +227,18 @@ public class RecursiveDescent {
         } else if (expect(Tag.INT) || expect(Tag.DOUBLE)){  // invalid declaration
             System.err.println(peek().getLine()+"行出现新的声明");
             throw new MyException(MyException.DECERROR,peek().getLine());
-        } else if (expect(Tag.BREAK)){
+        } else if (expect(Tag.BREAK)){  // 悬空break
             System.err.println(peek().getLine()+"行出现悬空break");
             throw new MyException(MyException.BREAKERROR,peek().getLine());
-        }else if (expect(Tag.CONTINUE)){
+        }else if (expect(Tag.CONTINUE)){// 悬空continue
             System.err.println(peek().getLine()+"行出现悬空continue");
             throw new MyException(MyException.CONTINUEERROR,peek().getLine());
-        }else if (expect(Tag.RIGHT_FBRACKET) && currentFunctionType == Tag.VOID) {
+        }else if (expect(Tag.RIGHT_FBRACKET) && currentFunctionType == Tag.VOID) {  // 处理void无return关键字
             return;
         }
         else
             block();
-        if (SymbolTable.TOKENS.size() == size)
+        if (SymbolTable.TOKENS.size() == size)  // 经过一遍轮询未减少任一token，代表出错
             error();
         // TODO: 简单起见，主函数只有一个 return 语句
         if (!expect(Tag.RETURN))
@@ -501,7 +501,6 @@ public class RecursiveDescent {
             stat();
     }
 
-
     /**
      * statement 语句，以 ";" 结束
      */
@@ -634,22 +633,22 @@ public class RecursiveDescent {
     private void whileStat(){
         match(Tag.WHILE);match(Tag.LEFT_BRACKET);
         loopCommonFunc();
-        ArrayList<String> list = bool();
-        int ifBefore = If.gen(list.get(1),list.get(0),list.get(2));
+        ArrayList<Integer> ifGenLineList = new ArrayList<>();
+        bool(ifGenLineList);
         match(Tag.RIGHT_BRACKET);
         if (expect(Tag.LEFT_FBRACKET))
             block();
         else
             stat();
-        While.genBackStat(ifBefore-1);  // 跳转至if条件判断语句处
-        If.backPatch(ifBefore);
+        While.genBackStat(ifGenLineList.get(0)-1);  // 跳转至if条件判断语句处
+        If.backPatch(ifGenLineList);
         if (!breakStack.empty()){
             breakStack.peek().getBreakStack().forEach(Break::backPatchBreakCode);
             breakStack.pop();
         }
         if (!continueStack.empty()){
             for (Integer curLine : continueStack.peek().getContinueStack()) {
-                Continue.backPatchContinueCode(curLine,ifBefore-1);
+                Continue.backPatchContinueCode(curLine,ifGenLineList.get(0)-1);
             }
             continueStack.pop();
         }
@@ -668,8 +667,8 @@ public class RecursiveDescent {
         assign();   // for语句第一个赋值语句
         if (expect(Tag.SEMICOLON))
             move();
-        ArrayList<String> list = bool();    // for语句第二个比较语句
-        int ifBefore = If.gen(list.get(1),list.get(0),list.get(2));
+        ArrayList<Integer> ifGenLineList = new ArrayList<>();
+        bool(ifGenLineList);        // for语句第二个比较语句
         if (expect(Tag.SEMICOLON))
             move();
 
@@ -698,8 +697,8 @@ public class RecursiveDescent {
         forRecordStack.pop();
         /**************************************/
 
-        While.genBackStat(ifBefore-1);  // 跳转至if条件判断语句处
-        If.backPatch(ifBefore);
+        While.genBackStat(ifGenLineList.get(0)-1);  // 跳转至if条件判断语句处
+        If.backPatch(ifGenLineList.get(0));
         if (!breakStack.empty()){
             breakStack.peek().getBreakStack().forEach(Break::backPatchBreakCode);
             breakStack.pop();
@@ -720,15 +719,15 @@ public class RecursiveDescent {
      */
     private void ifStat(){
         match(Tag.IF);match(Tag.LEFT_BRACKET);
-        ArrayList<String> list = bool();
-        int ifBefore = If.gen(list.get(1),list.get(0),list.get(2));
+        ArrayList<Integer> ifGenLineList = new ArrayList<>();
+        bool(ifGenLineList);
         match(Tag.RIGHT_BRACKET);
         if (expect(Tag.LEFT_FBRACKET))
             block();
         else
             stat();
         // 回填
-        If.backPatch(ifBefore);
+        If.backPatch(ifGenLineList);
         if (expect(Tag.ELSE)){
             move();
             int elseBefore = Else.gen();
@@ -736,7 +735,32 @@ public class RecursiveDescent {
                 block();
             else
                 stat();
-            Else.backPatch(ifBefore,elseBefore);
+            Else.backPatch(ifGenLineList,elseBefore);
+        }
+    }
+
+    /**
+     * bool 条件句，用于判断
+     * @return 返回结果列表，list[0]表示比较式左边表达式结果，list[1]表示比较符号，list[2]表示比较式右边表达式结果
+     */
+    private void bool(ArrayList<Integer> ifGenLineList){
+        ArrayList<String> list = new ArrayList<>();
+        wrapExpr();
+        list.add(stack.peek().toString());
+        if (!isComparableSymbols(peek().getType()))
+            error();
+        list.add(SymbolTable.TAG2SYMBOL.get(move().getType()));
+        wrapExpr();
+        list.add(stack.peek().toString());
+        ifGenLineList.add(If.gen(list.get(1),list.get(0),list.get(2)));
+        if (expect(Tag.AND)){
+            move();
+            bool(ifGenLineList);
+        }else if (expect(Tag.OR)){
+            move();
+            int index = ifGenLineList.size()-1;
+            bool(ifGenLineList);
+            If.backPatchIfStat(ifGenLineList.get(index)-1);
         }
     }
 
@@ -771,22 +795,6 @@ public class RecursiveDescent {
                 throw new MyException(MyException.INCERROR,t.getLine());
 
         }
-    }
-
-    /**
-     * bool 条件句，用于判断
-     * @return 返回结果列表，list[0]表示比较式左边表达式结果，list[1]表示比较符号，list[2]表示比较式右边表达式结果
-     */
-    private ArrayList<String> bool(){
-        ArrayList<String> list = new ArrayList<>();
-        wrapExpr();
-        list.add(stack.peek().toString());
-        if (!isComparableSymbols(peek().getType()))
-            error();
-        list.add(SymbolTable.TAG2SYMBOL.get(move().getType()));
-        wrapExpr();
-        list.add(stack.peek().toString());
-        return list;
     }
 
     /**

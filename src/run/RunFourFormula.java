@@ -98,8 +98,8 @@ public class RunFourFormula {
                 Result.ARRAYRESULT.get(idName).set(arrayIndex,value);
             }
         }else if (SymbolTable.COMPAREWORDS.contains(SymbolTable.SYMBOL2TAG.get(op))){
-            if (compare(op,getArgValue(arg1),getArgValue(arg2)))   // 满足条件，走result的goto
-                curPoint++; // if返回true时候，当前指针实际是 if的下面第二行
+            if (compare(op,getArgValue(arg1),getArgValue(arg2)))   // 满足条件，走 if 语句的result的goto语句
+                curPoint = Integer.parseInt(SymbolTable.fourFormulas.get(curPoint-1).getResult().split(" ")[1]);
         }else if (op.equals("goto")){
             curPoint = Integer.parseInt(res);
         }else if (SymbolTable.operator.contains(op)){
